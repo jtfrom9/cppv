@@ -1,12 +1,13 @@
-TARGET = libvpicpp.vpi
+TARGET = libvpicpp-iverilog.vpi
 
-CFLAGS += 
-LDFLAGS += -lvpi
+CFLAGS += -I$(IVERILOG_VPI_INC_DIR)
+LDFLAGS += -L$(IVERILOG_VPI_LIB_DIR) -lvpi
 
 run: compile
-	@iverilog test.v
-	@vvp -m./$(TARGET:.vpi=) a.out
+	iverilog test.v
+	vvp -m./$(TARGET:.vpi=) a.out
 
+.PHONY: clean_sim
 clean_sim:
 	rm -rf a.out
 

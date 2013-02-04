@@ -1,0 +1,12 @@
+TARGET = libvpicpp-cver.so
+
+CFLAGS += -I$(CVER_VPI_INC_DIR)
+
+run: compile
+	cver +loadvpi=./$(TARGET):initialCallback test.v
+
+.PHONY: clean_sim
+clean_sim:
+	rm -rf verilog.log
+
+
