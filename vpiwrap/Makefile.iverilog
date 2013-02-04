@@ -1,0 +1,13 @@
+TARGET = libvpicpp.vpi
+
+CFLAGS += 
+LDFLAGS += -lvpi
+
+run: compile
+	@iverilog test.v
+	@vvp -m./$(TARGET:.vpi=) a.out
+
+clean_sim:
+	rm -rf a.out
+
+

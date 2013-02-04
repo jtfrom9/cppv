@@ -1,0 +1,14 @@
+TARGET = libvpicpp.so
+
+ifeq ($(strip $(VCS_HOME)),)
+	VCS_HOME=/opt/synopsys/latest
+endif
+
+CFLAGS += -I$(VCS_HOME)/include
+
+run: compile
+	@vcs -R +vpi +cli -load $(TARGET):initialCallback test.v
+
+clean_sim:
+	rm -rf csrc simv* ucli.key
+
