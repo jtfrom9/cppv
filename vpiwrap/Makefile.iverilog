@@ -4,8 +4,8 @@ CFLAGS += -I$(IVERILOG_VPI_INC_DIR)
 LDFLAGS += -L$(IVERILOG_VPI_LIB_DIR) -lvpi
 
 run: compile
-	iverilog test.v
-	vvp -m./$(TARGET:.vpi=) a.out
+	$(IVERILOG_BIN_DIR)/iverilog test.v -s$(TOP)
+	$(IVERILOG_BIN_DIR)/vvp -m./$(TARGET:.vpi=) a.out
 
 .PHONY: clean_sim
 clean_sim:

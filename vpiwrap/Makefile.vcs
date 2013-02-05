@@ -6,8 +6,11 @@ endif
 
 CFLAGS += -I$(VCS_HOME)/include
 
-run: compile
-	vcs -R +vpi +cli -load $(TARGET):initialCallback test.v
+simbuild: compile
+	vcs +vpi +cli test.v -load $(TARGET):initialCallback 
+
+run: simbuild
+	LD_LIBRARY_PATH=$(shell pwd) simv -l simv.log 
 
 .PHONY: clean_sim
 clean_sim:
