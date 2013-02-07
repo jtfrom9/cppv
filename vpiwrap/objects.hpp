@@ -1,40 +1,31 @@
 #ifndef OBJECTS_HPP
 #define OBJECTS_HPP
 
-#include <iostream>
-#include <vector>
-#include <sstream>
-#include <algorithm>
+#include <string>
 #include <cstring>
-#include <stdexcept>
-#include <tr1/memory>
+#include <vector>
+#include <iostream>
+
+#include "boost/noncopyable.hpp"
+#include "boost/shared_ptr.hpp"
 
 #include "vpi_user.h"
 
-class NonCopyable
-{
-  protected:
-    NonCopyable () {}
-    ~NonCopyable () {} 
-
-  private: 
-    NonCopyable(const NonCopyable &);
-    NonCopyable& operator=(const NonCopyable &);
-};
-
-class VPIObject: private NonCopyable
+class VPIObject: private boost::noncopyable
 {
 protected:
     vpiHandle _handle;
+    
+    // ctor
     VPIObject(vpiHandle h): _handle(h) 
     {}
 
-public:
+    // dtor
     virtual ~VPIObject() {
-#if 0        
-        vpi_release_handle( _handle );
-#endif
+        //vpi_release_handle( _handle );
     }
+
+public:
 
     // VPIType type() {
     //     vpi_get(vpiType,_handle);
@@ -56,7 +47,7 @@ public:
         return vpi_get_str(vpiFullName, _handle);
     }
     
-    virtual std::string to_str() = 0;
+    virtual std::string to_str() const = 0;
 
     class predNameOf {
     private:
@@ -69,8 +60,9 @@ public:
             return obj->name() == _name;
         }
     };
-};
 
+    typedef boost::shared_ptr<VPIObject> ptr;
+};
 
 
 class Reg: public VPIObject
@@ -79,11 +71,12 @@ private:
     s_vpi_value _val;
     s_vpi_time _time;
 
+    // ctor
     Reg(vpiHandle h): VPIObject(h)
     {}
 
 public:
-    typedef std::shared_ptr<Reg> ptr;
+    typedef boost::shared_ptr<Reg> ptr;
 
     static ptr create(vpiHandle h) {
         return ptr(new Reg(h));
@@ -110,25 +103,9 @@ public:
     }
 
     // overrides
-    virtual std::string to_str() {
-        std::stringstream ss;
-        ss << name() << "["
-           << ":width=" << width()
-           << "]";
-        return ss.str();
-    }
+    std::string to_str() const;
 };
 
-void scanRegs( std::vector<Reg::ptr>& regs, const VPIObject& vpiObj )
-{
-    vpiHandle iter = vpi_iterate(vpiReg, vpiObj.handle());
-    vpiHandle ph;
-    if(iter!=NULL) {
-        while((ph = vpi_scan(iter)) != NULL) {
-            regs.push_back( Reg::create(ph) );
-        }
-    }
-}
 
 class Port: public VPIObject
 {
@@ -136,11 +113,12 @@ private:
     s_vpi_value _val;
     s_vpi_time _time;
 
+    // ctor
     Port(vpiHandle h): VPIObject(h)
     {}
 
 public:
-    typedef std::shared_ptr<Port> ptr;
+    typedef boost::shared_ptr<Port> ptr;
 
     static ptr create(vpiHandle h) {
         return ptr(new Port(h));
@@ -189,161 +167,36 @@ public:
     }
 
     // overrides
-    virtual std::string to_str() {
-        std::stringstream ss;
-        ss << name() << "["
-           << "dir=" << direction()
-           << ":width=" << width()
-           << ":@" << index()
-           << "]";
-        return ss.str();
-    }
+    std::string to_str() const;
 };
-
-void scanPorts( std::vector<Port::ptr>& ports, const VPIObject& vpiObj )
-{
-    vpiHandle iter = vpi_iterate(vpiPort, vpiObj.handle());
-    vpiHandle ph;
-    if(iter!=NULL) {
-        while((ph = vpi_scan(iter)) != NULL) {
-            ports.push_back( Port::create(ph) );
-        }
-    }
-}
-
 
 class Module: public VPIObject
 {
 public:
-    typedef std::shared_ptr<Module> ptr;
+    typedef boost::shared_ptr<Module> ptr;
 
     static ptr create(vpiHandle h) {
         return ptr(new Module(h));
     }
 
-    std::vector<Module::ptr> _modules;
-
 private:
+    std::vector<Module::ptr> _modules;
     std::vector<Port::ptr> _ports;
     std::vector<Reg::ptr> _regs;
 
-    Module(vpiHandle h): VPIObject(h)
-    {
-        scanPorts(_ports, *this);
-        scanRegs(_regs, *this);
-        scanModules(_modules, this);
-    }
-
+    //ctor
+    // Module(vpiHandle h): VPIObject(h)
+    // {}
+    Module(vpiHandle h);
 
 public:
     // overrides
-    virtual std::string to_str() {
-        std::stringstream ss;
-        ss << "(";
-        for(std::vector<Port::ptr>::iterator p = _ports.begin(); p!=_ports.end(); ++p) {
-            ss << (*p)->to_str() << ", ";
-        }
-        for(std::vector<Reg::ptr>::iterator r = _regs.begin(); r!=_regs.end(); ++r) {
-            ss << (*r)->to_str() << ", ";
-        }
-        ss << ")";
-        return ss.str();
-    }
+    virtual std::string to_str() const;
 
-    Port::ptr get_port(std::string name) {
-        std::vector<Port::ptr>::iterator pp;
-        if ((pp = find_if( _ports.begin(), _ports.end(), VPIObject::predNameOf(name) )) == _ports.end()) {
-            throw std::runtime_error("get_port: not found: " + name);
-        }
-        return *pp;
-    }
-
-    Reg::ptr get_reg(std::string name) {
-        std::vector<Reg::ptr>::iterator pp;
-        if ((pp = find_if( _regs.begin(), _regs.end(), VPIObject::predNameOf(name) )) == _regs.end()) {
-            throw std::runtime_error("get_reg: not found: " + name);
-        }
-        return *pp;
-    }
-
-    static void scanModules( std::vector<Module::ptr>& mods, const VPIObject* obj=0 ) 
-    {
-        vpiHandle mod_iter = vpi_iterate(vpiModule, (obj==0) ? NULL : obj->handle());
-        
-        if (mod_iter==NULL)
-            return;
-
-        while(1) {
-            vpiHandle modh;
-            if((modh = vpi_scan(mod_iter)) == NULL)
-                break;
-            mods.push_back(Module::create(modh));
-        }
-    }
-
+    Port::ptr get_port(std::string name) const;
+    Reg::ptr get_reg(std::string name) const;
 };
-/*
-class Global {
 
-private:
-
-public:
-    static Global *instance;
-    std::vector<Module::ptr> modules;
-
-    static Global& get() { 
-        return *instance;
-    }
-
-    static void initialize()
-    {
-        Global::instance = new Global();
-
-        Module::scanModules(instance->modules);
-
-        for(unsigned int i=0; i<instance->modules.size(); i++) {
-            std::cout << "[" << i << "] " 
-                      << instance->modules[i]->type_str() 
-                      << ": " << instance->modules[i]->name()
-                      << ": " << instance->modules[i]->fullname()
-                      << ": " << instance->modules[i]->to_str()
-                      << std::endl;
-        }
-
-        for(unsigned int i=0; i<instance->modules[0]->_modules.size(); i++) {
-            std::cout << "[" << i << "] " 
-                      << instance->modules[0]->_modules[i]->type_str() 
-                      << ": " << instance->modules[0]->_modules[i]->name()
-                      << ": " << instance->modules[0]->_modules[i]->fullname()
-                      << ": " << instance->modules[0]->_modules[i]->to_str()
-                      << std::endl;
-        }
-    }
-};
-*/
-std::vector<Module::ptr> modules;
-void initialize()
-{
-    Module::scanModules(modules);
-
-    for(unsigned int i=0; i<modules.size(); i++) {
-        std::cout << "[" << i << "] " 
-                  << modules[i]->type_str() 
-                  << ": " << modules[i]->name()
-                  << ": " << modules[i]->fullname()
-                  << ": " << modules[i]->to_str()
-                  << std::endl;
-    }
-
-    for(unsigned int i=0; i<modules[0]->_modules.size(); i++) {
-        std::cout << "[" << i << "] " 
-                  << modules[0]->_modules[i]->type_str() 
-                  << ": " << modules[0]->_modules[i]->name()
-                  << ": " << modules[0]->_modules[i]->fullname()
-                  << ": " << modules[0]->_modules[i]->to_str()
-                  << std::endl;
-    }
-}
 
 #endif
 

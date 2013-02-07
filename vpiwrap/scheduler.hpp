@@ -1,11 +1,15 @@
 #ifndef SCHEDULER_HPP
 #define SCHEDULER_HPP
 
-#include<set>
-#include<stdexcept>
-#include<tr1/memory>
+#include <cstring>
+#include <set>
+#include <stdexcept>
 
-using std::tr1::shared_ptr;
+#include "boost/shared_ptr.hpp"
+
+#include "objects.hpp"
+
+using boost::shared_ptr;
 
 class ITimerEventObserver
 {
@@ -69,28 +73,6 @@ public:
         cbdata.user_data = (PLI_BYTE8*)this;
 
         vpi_register_cb(&cbdata);
-    }
-};
-
-long long get_time() {
-    s_vpi_time time;
-    memset(&time,0,sizeof(time));
-    time.type = vpiSimTime;
-    vpi_get_time(NULL,&time);
-    return (long long)time.high << 32 | (long long)time.low;
-}
-
-class TimerHandler1: public ITimerEventObserver
-{
-public:
-    void onTimer() {
-        static int v = 0;
-        std::cout << "onTimer:" << get_time() << std::endl;
-
-        Reg::ptr r = ::modules[0]->get_reg("clk");
-        v = (v) ? 0 : 1;
-        r->write(v);
-
     }
 };
 
