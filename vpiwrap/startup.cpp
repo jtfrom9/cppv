@@ -1,7 +1,7 @@
 #include <vector>
 
 #include "objects.hpp"
-#include "Simulator.hpp"
+#include "SimulatorImpl.hpp"
 #include "Process.hpp"
 #include "ProcessImpl.hpp"
 
@@ -15,12 +15,19 @@ ProcessManager *pmanager;
 
 int startup(s_cb_data*cpb)
 {
-    Simulator::getSimulator(); // init
+    // create simlation instance 
+    SimulatorImpl* sim = new SimulatorImpl();
 
-    pmanager = new ProcessManagerImpl();
-    pmanager->add(new MainProcess());
-
-    pmanager->start();
+    // initialize ProcessManager
+    ProcessManager::create( sim );
+    
+    ProcessManager& m = ProcessManager::get();
+    
+    // register Main
+    m.add(new MainProcess());
+    
+    // first schedule
+    m.schedule(); 
 
     return 0;
 }

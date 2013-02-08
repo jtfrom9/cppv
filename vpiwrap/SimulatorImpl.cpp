@@ -4,19 +4,12 @@
 #include <algorithm>
 
 #include "SimulatorImpl.hpp"
+#include "util.hpp"
 
 using std::string;
 using std::vector;
-
-static SimulatorImpl* simImpl = 0;
-
-Simulator& Simulator::getSimulator()
-{
-    if(simImpl==0) {
-        simImpl = new SimulatorImpl();
-    }
-    return *simImpl;
-}
+using std::invalid_argument;
+using std::runtime_error;
 
 // ctor
 SimulatorImpl::SimulatorImpl()
@@ -63,7 +56,7 @@ void SimulatorImpl::scanModules( vector<Module::ptr>& mods, const VPIObject* obj
 
 VPIObject& SimulatorImpl::getObject(const char* path) const
 {
-    return (*_modules[0]);
+    throw not_implemented(string(__func__));
 }
 
 Module& SimulatorImpl::getModule( int index ) const
@@ -75,7 +68,23 @@ Module& SimulatorImpl::getModule( const char* path ) const
 {
     vector<Module::ptr>::const_iterator pm;
     if((pm = std::find_if(_modules.begin(), _modules.end(), VPIObject::predNameOf(path))) == _modules.end()) {
-        throw std::invalid_argument(string(__func__) + ": not found: " + path);
+        throw invalid_argument(string(__func__) + ": not found: " + path);
     }
     return **pm;
+}
+
+typedef PLI_INT32 handler_type( s_cb_data* );
+
+static void __handler( s_cb_data* pcbdata )
+{
+    SimulatorCallback* cb = (SimulatorCallback*)pcbdata->user_data;
+    cb->called();
+}
+
+void SimulatorImpl::registerCallback( const SimulatorCallback* cb, vpi_descriptor *desc ) const
+{
+    desc->cbdata.cb_rtn    = (handler_type*)__handler;
+    desc->cbdata.user_data = (PLI_BYTE8*)cb;
+    desc->cbdata.time      = &desc->time;
+    vpi_register_cb( &desc->cbdata );
 }

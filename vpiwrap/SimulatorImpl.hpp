@@ -4,8 +4,6 @@
 #include "objects.hpp"
 #include "Simulator.hpp"
 
-#include "vpi_user.h"
-
 class SimulatorImpl: public Simulator
 {
 private:
@@ -21,6 +19,8 @@ public:
     
     Module& getModule( int index ) const;
     Module& getModule( const char* path ) const;
+
+    void registerCallback( const SimulatorCallback* cb, vpi_descriptor *desc ) const;
 
     static void scanRegs( std::vector<Reg::ptr>& regs, const VPIObject& vpiObj );
     static void scanPorts( std::vector<Port::ptr>& ports, const VPIObject& vpiObj );

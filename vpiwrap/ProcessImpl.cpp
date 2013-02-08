@@ -1,45 +1,111 @@
 #include "ProcessImpl.hpp"
+#include "util.hpp"
 
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
+#include <string>
 
 using std::vector;
+using std::string;
 using std::invalid_argument;
+using std::runtime_error;
 
-Process::ptr ProcessManagerImpl::add(Process* process)
+static ProcessManagerImpl* managerImpl = 0;
+
+// singleton
+void ProcessManager::create( Simulator* sim )
 {
-    if (process==0)
-        throw invalid_argument("process == null");
-
-    ProcessImpl::ptr ptr( dynamic_cast<ProcessImpl*>(process) );
-
-    if (std::find(_processes.begin(), _processes.end(), ptr) != _processes.end())
-        throw invalid_argument("already registered");
-
-    ptr->setManager(this);
-    _processes.push_back(ptr);
-    return ptr;
+    if(managerImpl!=0) {
+        throw std::runtime_error("ProcessManager already created");
+    }
+    managerImpl = new ProcessManagerImpl( sim );
 }
 
-void ProcessManagerImpl::start()
+// singleton
+ProcessManager& ProcessManager::get()
 {
-    for(vector<ProcessImpl::ptr>::iterator p=_processes.begin();
-        p != _processes.end(); ++p) 
-    {
-        int value;
-
-        (*p)->next(); // 実行(ここでコンテキストスイッチ)
-            
-        if((*p)->receive(&value)) {
-            // yeild commandの処理(タイマー、信号変化コールバック)
-        }
-        if((*p)->end()) {
-            // Processの終了。_processesから外すか、別のリストに入れるか
-        }
+    if(managerImpl==0) {
+        throw std::runtime_error("ProcessManager Not created yet");
     }
-    // 全部終った終了。start()自体がVPIコールバック内で呼ばれるので
-    // VPIコールバックが終了し、シミュレータの動作に遷移
+    return *managerImpl;
+}
+
+
+// public override
+void ProcessManagerImpl::add( Process* proc )
+{
+    if (proc==0)
+        throw invalid_argument("process == null");
+
+    if (std::find(_processes.begin(), _processes.end(), proc) != _processes.end())
+        throw invalid_argument("already registered");
+
+    ProcessImpl *procImpl = dynamic_cast<ProcessImpl*>( proc );
+    if( procImpl == 0 )
+        throw invalid_argument(string(__func__) + ": invalid process");
+    _processes.push_back( procImpl );
+}
+
+// private
+void ProcessManagerImpl::switch_to( ProcessImpl* proc )
+{
+    Command* command;
+    
+    _current = proc;
+    try {
+        proc->next(); // context switch
+    } catch( const stop_iteration& e ) {
+        cout << "Process End" << endl;
+    }
+    _current = 0;
+    
+    if(proc->receive( &command )) {
+        command->setManager( this );
+        // do request from Process by yield_send() methods
+        command->execute( *_sim );
+    }
+}
+
+// public override
+void ProcessManagerImpl::schedule()
+{
+    process_container temp;
+    ProcessImpl* procImpl;
+
+    while(!_processes.empty()) {
+        procImpl = _processes.front();
+        _processes.pop_front();
+
+        switch_to( procImpl );
+        
+        // if not end save to temp ( restore later... )
+        if( !procImpl->end() ) 
+            temp.push_back( procImpl );
+        else
+            _end_processes.push_back( procImpl );
+    }
+
+    // restore to _processes
+    _processes.assign( temp.begin(), temp.end() );
+}
+
+// public override
+void ProcessManagerImpl::raise( Process* proc )
+{
+    ProcessImpl* procImpl = dynamic_cast<ProcessImpl*>(proc);
+    if (procImpl==0)
+        throw invalid_argument(string(__func__) + ": invalid process");
+    switch_to( procImpl );
+
+    if( procImpl->end() ) {
+        try {
+            _processes.erase( std::find( _processes.begin(), _processes.end(), procImpl ) );
+        } catch (const std::exception& e) {
+            throw invalid_argument(string(__func__) + ": fail to erase.");
+        }
+        _end_processes.push_back( procImpl );
+    }
 }
 
 /*

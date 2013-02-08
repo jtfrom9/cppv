@@ -9,6 +9,8 @@
 
 #include "objects.hpp"
 
+#include "vpi_user.h"
+
 class SimulatorError: public std::runtime_error
 {
 public:
@@ -16,6 +18,18 @@ public:
     {}
     SimulatorError( const char* what_arg ): std::runtime_error( what_arg )
     {}
+};
+
+class SimulatorCallback 
+{
+public:
+    virtual void called() = 0;
+};
+
+struct vpi_descriptor
+{
+    s_cb_data cbdata;
+    s_vpi_time time;
 };
 
 class Simulator: public boost::noncopyable
@@ -26,8 +40,7 @@ public:
     virtual Module& getModule( int index ) const           = 0;
     virtual Module& getModule( const char* path ) const    = 0;
 
-    static Simulator& getSimulator();
-    //static Simulator getSimulatorProxy();
+    virtual void registerCallback( const SimulatorCallback* cb, vpi_descriptor *desc ) const = 0;
 };
 
 void dumpTopology(std::ostream os, const Simulator& sim);

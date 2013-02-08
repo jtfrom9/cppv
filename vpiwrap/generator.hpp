@@ -77,6 +77,8 @@ public:
     {}
 
     bool receive(T* pdata) {
+        if(end())
+            return false;
         if(_has_data && pdata!= 0 )
             *pdata = _data;
         return _has_data;

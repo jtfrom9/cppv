@@ -1,39 +1,71 @@
 #ifndef PROCESSIMPL_HPP
 #define PROCESSIMPL_HPP
 
-#include <vector>
+#include <list>
+#include <string>
 
-#include "boost/shared_ptr.hpp"
+#include <boost/shared_ptr.hpp>
+using boost::shared_ptr;
 
 #include "Process.hpp"
 #include "generator.hpp"
+#include "Command.hpp"
 
-class ProcessImpl: public Process, generic_generator<int>
+class ProcessImpl: public Process, public generic_generator<Command*>
 {
 private:
-    ProcessManager* _manager;
-
-protected:
-    void wait(int cycle) {
-        yield();
-    }
-    void wait(ISignal signal) {
-        yield();
-    }
-
-private:
-    void setManager(ProcessManager* manager) {
-        _manager = manager;
-    }
+    typedef shared_ptr<Command> res;
 
 public:
     ProcessImpl(const char* name):
         Process(name)
     {}
 
-    typedef boost::shared_ptr<ProcessImpl> ptr;
-    friend class ProcessManagerImpl;
+    void wait( int cycle ) {
+        yield_send( res(new DelayCommand(this, cycle)).get() );
+    }
+
+    void wait(ISignal signal) {
+        yield();
+    }
 };
+
+
+class ProcessManagerImpl: public ProcessManager
+{
+private:
+    const Simulator *_sim;
+    ProcessImpl* _current;
+
+    typedef std::list<ProcessImpl*> process_container;
+    process_container _processes;
+    process_container _end_processes;
+
+    void switch_to( ProcessImpl* proc );
+
+    // cannnot be deleted temporary
+    virtual ~ProcessManagerImpl()
+    {}
+
+public:
+    ProcessManagerImpl( const Simulator* sim ): 
+        _sim(sim), 
+        _current(0)
+    {}
+
+    Process* getCurrent() const {
+        if (_current==0)
+            throw std::runtime_error(std::string(__func__) + ": _current==0");
+        return _current;
+    }
+
+    void add( Process* proc );
+    void schedule();
+    void raise( Process* proc );
+
+    const Simulator& getSimulator() { return *_sim; }
+};
+
 
 
 int vmain(int argc, char* argv[]);
@@ -44,22 +76,11 @@ public:
     MainProcess():
         ProcessImpl("MainProcess")
     {}
+
 protected:
     void body() {
         vmain(0,0);
     }
 };
-
-
-class ProcessManagerImpl: public ProcessManager
-{
-private:
-    std::vector<ProcessImpl::ptr> _processes;
-
-public:
-    Process::ptr add(Process* process);
-    void start();
-};
-
 
 #endif

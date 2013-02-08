@@ -11,6 +11,12 @@ module skel();
    // initial begin
    //    $load_veriepy_script;
    // end
+
+   initial begin
+      $dumpvars;
+      //$vcdpluson;
+   end
+        
 endmodule
 
 module test(
