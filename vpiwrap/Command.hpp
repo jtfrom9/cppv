@@ -2,71 +2,75 @@
 #define COMMAND_HPP
 
 #include <cstring>
+#include "boost/noncopyable.hpp"
 
-#include "Process.hpp"
-#include "Simulator.hpp"
 #include "util.hpp"
+#include "Simulator.hpp"
+#include "ProcessManager.hpp"
 
-class Command: public SimulatorCallback
+class Process;
+
+class Command: public SimulatorCallback, public boost::noncopyable
 {
-public:
-    typedef enum { DELAY, VALUE_CHANGE, EXPR } type_t;
-
 protected:
-    type_t _type;
     Process* _proc;
     ProcessManager* _manager;
 
 public:
-    Command( type_t type, Process* proc ):
-        _type(type),
+    Command( Process* proc ):
         _proc(proc)
     {}
 
-    virtual ~Command() {
-        cout << "Command deleted" << endl;
-    }
-
-    type_t type() const { return _type; }
-    
-    virtual void execute( const Simulator& sim ) = 0;
+    virtual ~Command() 
+    {}
 
     void setManager( ProcessManager* manager )
     {
         _manager = manager;
     }
+    virtual void execute() = 0;
 };
 
 
-class DelayCommand: public Command
+class VPICommand: public Command
+{
+protected:
+    vpi_descriptor _desc;
+
+public:
+    VPICommand( Process* proc ):
+        Command( proc )
+    {
+        memset(&_desc, 0, sizeof(_desc));
+    }
+};
+
+
+class DelayCommand: public VPICommand
 {
     int _cycle;
-    
+
 public:
     DelayCommand( Process* proc, int cycle ): 
-        Command( Command::DELAY, proc ),
-        _cycle(cycle) 
+        VPICommand( proc ),
+        _cycle( cycle )
     {}
 
     // override
-    void execute( const Simulator& sim )
+    void execute()
     {
-        vpi_descriptor desc;
+        _desc.time.type = vpiSimTime;
+        _desc.time.high = 0;
+        _desc.time.low  = _cycle;
 
-        memset(&desc,0,sizeof(desc));
-
-        desc.time.type = vpiSimTime;
-        desc.time.high = 0;
-        desc.time.low  = _cycle;
-
-        desc.cbdata.reason    = cbAfterDelay;
+        _desc.cbdata.reason    = cbAfterDelay;
         //cbdata.cb_rtn       = ... set by Simulator ...
-        desc.cbdata.obj       = NULL;
-        desc.cbdata.time      = &desc.time;
-        desc.cbdata.value     = NULL;
-        //desc.cbdata.user_data = ... set by Simulator ...
+        _desc.cbdata.obj       = NULL;
+        _desc.cbdata.time      = &_desc.time;
+        _desc.cbdata.value     = NULL;
+        //_desc.cbdata.user_data = ... set by Simulator ...
 
-        sim.registerCallback( this, &desc );
+        _manager->getSimulator().registerCallback( this, &_desc );
     }
 
     void called()

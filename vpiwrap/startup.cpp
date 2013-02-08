@@ -1,25 +1,31 @@
 #include <vector>
 
 #include "objects.hpp"
-#include "SimulatorImpl.hpp"
+#include "Simulator.hpp"
 #include "Process.hpp"
-#include "ProcessImpl.hpp"
+#include "ProcessManager.hpp"
 
 #include "vpi_user.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+extern int vmain(int argc, char* argv[]);
 
-ProcessManager *pmanager;
+class MainProcess: public Process
+{
+public:
+    MainProcess():
+        Process("MainProcess")
+    {}
+
+protected:
+    void main() {
+        vmain(0,0);
+    }
+};
 
 int startup(s_cb_data*cpb)
 {
-    // create simlation instance 
-    SimulatorImpl* sim = new SimulatorImpl();
-
-    // initialize ProcessManager
-    ProcessManager::create( sim );
+    // initialize Simulation & ProcessManager instance
+    ProcessManager::create( Simulator::create() );
     
     ProcessManager& m = ProcessManager::get();
     
@@ -31,6 +37,10 @@ int startup(s_cb_data*cpb)
 
     return 0;
 }
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void initialCallback()
 {

@@ -2,6 +2,7 @@
 
 #include "Simulator.hpp"
 #include "Process.hpp"
+#include "ProcessManager.hpp"
 
 using std::cout;
 using std::endl;
@@ -12,12 +13,6 @@ long long get_time() {
     time.type = vpiSimTime;
     vpi_get_time(NULL,&time);
     return (long long)time.high << 32 | (long long)time.low;
-}
-
-void delay(int cycle)
-{
-    Process *currentProcess = ProcessManager::get().getCurrent();
-    currentProcess->wait(cycle);
 }
 
 int vmain(int argc, char *argv[])

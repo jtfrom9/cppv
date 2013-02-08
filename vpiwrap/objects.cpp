@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 #include "objects.hpp"
-#include "SimulatorImpl.hpp"
+#include "Simulator.hpp"
 
 using std::vector;
 using std::string;
@@ -35,19 +35,19 @@ string Port::to_str() const {
 Module::Module(vpiHandle h): VPIObject(h)
 {
     try {
-        SimulatorImpl::scanPorts(_ports, *this);
+        Simulator::scanPorts(_ports, *this);
     } 
     catch(const SimulatorError& e) {
         // Do Nothing
     }
     try {
-        SimulatorImpl::scanRegs(_regs, *this);
+        Simulator::scanRegs(_regs, *this);
     }
     catch(const SimulatorError& e) {
         // Do Nothing
     }
     try {
-        SimulatorImpl::scanModules(_modules, this);
+        Simulator::scanModules(_modules, this);
     }
     catch(const SimulatorError& e) {
         // Do Nothing
