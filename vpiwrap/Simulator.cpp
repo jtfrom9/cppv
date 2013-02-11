@@ -23,7 +23,7 @@ static void __handler( s_cb_data* pcbdata )
 class SimulatorImpl: public Simulator
 {
 private:
-    std::vector<Module::ptr> _modules;
+    vector<Module::ptr> _modules;
 
 public:
     // ctor
@@ -75,6 +75,18 @@ void Simulator::scanRegs( vector<Reg::ptr>& regs, const VPIObject& vpiObj )
         throw SimulatorError(string(__func__) + ": fail to scan vpiReg");
     while((ph = vpi_scan(iter)) != NULL) {
         regs.push_back( Reg::create(ph) );
+    }
+}
+
+// static
+void Simulator::scanWires( vector<Wire::ptr>& wires, const VPIObject& vpiObj )
+{
+    vpiHandle iter = vpi_iterate(vpiNet, vpiObj.handle());
+    vpiHandle ph;
+    if(iter==NULL) 
+        throw SimulatorError(string(__func__) + ": fail to scan vpiWire");
+    while((ph = vpi_scan(iter)) != NULL) {
+        wires.push_back( Wire::create(ph) );
     }
 }
 

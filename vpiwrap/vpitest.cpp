@@ -19,12 +19,17 @@ int vmain(int argc, char *argv[])
 {
     const Simulator& sim = ProcessManager::get().getSimulator();
     Reg::ptr clk = sim.getModule(0).get_reg("clk");
+    Wire::ptr clko = sim.getModule(0).get_wire("clko");
+
+    cout << sim.getModule(0).to_str() << endl;
 
     for(int i=0; i<10; i++) {
         cout << "time: " << get_time() << endl;
         clk->write(0);
+        //cout << "clko = " << clko->read() << endl;
         delay(10);
         clk->write(1);
+        //cout << "clko = " << clko->read() << endl;
         delay(10);
     }
     return 0;

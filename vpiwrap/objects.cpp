@@ -50,6 +50,12 @@ Module::Module(vpiHandle h): VPIObject(h)
         // Do Nothing
     }
     try {
+        Simulator::scanWires(_wires, *this);
+    }
+    catch(const SimulatorError& e) {
+        // Do Nothing
+    }
+    try {
         Simulator::scanModules(_modules, this);
     }
     catch(const SimulatorError& e) {
@@ -82,9 +88,17 @@ Port::ptr Module::get_port(string name) const {
 */
 
 Reg::ptr Module::get_reg(string name) const {
-    vector<Reg::ptr>::const_iterator pp;
-    if ((pp = find_if( _regs.begin(), _regs.end(), VPIObject::predNameOf(name) )) == _regs.end()) {
+    vector<Reg::ptr>::const_iterator pr;
+    if ((pr = find_if( _regs.begin(), _regs.end(), VPIObject::predNameOf(name) )) == _regs.end()) {
         throw runtime_error("get_reg: not found: " + name);
     }
-    return *pp;
+    return *pr;
+}
+
+Wire::ptr Module::get_wire(std::string name) const {
+    vector<Wire::ptr>::const_iterator pw;
+    if ((pw = find_if( _wires.begin(), _wires.end(), VPIObject::predNameOf(name) )) == _wires.end()) {
+        throw runtime_error("get_wire: not found: " + name);
+    }
+    return *pw;
 }

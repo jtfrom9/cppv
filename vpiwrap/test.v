@@ -3,10 +3,11 @@ module skel();
    reg [15:0] B;
    wire [15:0] C;
    reg clk;
+   wire clko;
    
    //wire [15:0] C;
    //test t( .A(16'h0), .B(16'h0), .C(), .clk(clk));
-   test t( A, B, C, clk );
+   test t( A, B, C, clk, clko );
 
    // initial begin
    //    $load_veriepy_script;
@@ -16,27 +17,45 @@ module skel();
       $dumpvars;
       //$vcdpluson;
    end
-        
+
+   // initial begin
+   //    clk =0;
+   //    #200 $finish;
+   // end
+   //always #10 clk = ~clk;
+   
 endmodule
 
 module test(
             A,
             B,
             C,
-            clk);
+            clk,
+            clko);
    
    input [15:0] A;
    input [15:0] B;
    output [15:0] C;
-   input        clk;
+   input         clk;
+   output       clko;
    
    reg [15:0]    C;
    always @(A or B) begin
       C <= A + B;
    end
 
-   always @(posedge clk)
-     $display($time, ": clk posedge");
+   // reg clko;
+   // always @(clk) begin
+   //    clko <= ~clk;
+   // end
+   assign clko = ~clk;
+
+   // always @(clko)
+   //   $display($time, ": clk=%0d, clko=%0d", clk, clko);
+
+   always @(clk)
+     $display($time, ": clko=%0d",clko);
+
 endmodule
 
 

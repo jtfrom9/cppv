@@ -5,6 +5,7 @@
 #include <cstring>
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 #include "boost/noncopyable.hpp"
 #include "boost/shared_ptr.hpp"
@@ -107,6 +108,121 @@ public:
 };
 
 
+class Wire: public VPIObject
+{
+private:
+    s_vpi_value _val;
+    s_vpi_time _time;
+
+    // ctor
+    Wire(vpiHandle h): VPIObject(h)
+    {}
+
+public:
+    typedef boost::shared_ptr<Wire> ptr;
+    
+    static ptr create(vpiHandle h) {
+        return ptr(new Wire(h));
+    }
+
+    unsigned int width() const {
+        return (unsigned int)vpi_get(vpiSize, _handle);
+    }
+
+    std::string binstr()
+    {
+        std::memset(&_val,0,sizeof(_val));
+        _val.format    = vpiBinStrVal;
+        vpi_get_value(_handle, &_val);
+        return _val.value.str;
+    }
+
+    std::string hexstr()
+    {
+        std::memset(&_val,0,sizeof(_val));
+        _val.format    = vpiHexStrVal;
+        vpi_get_value(_handle, &_val);
+        return _val.value.str;
+    }
+
+    std::string scalar()
+    {
+        std::memset(&_val,0,sizeof(_val));
+        _val.format    = vpiScalarVal;
+        vpi_get_value(_handle, &_val);
+        switch( _val.value.scalar ) {
+        case vpi1: return "vpi1";
+        case vpi0: return "vpi0";
+        case vpiX: return "vpiX";
+        case vpiZ: return "vpiZ";
+        case vpiH: return "vpiH";
+        case vpiL: return "vpiL";
+        }
+        return "??";
+    }
+
+    std::string integer()
+    {
+        std::memset(&_val,0,sizeof(_val));
+        _val.format    = vpiIntVal;
+        vpi_get_value(_handle, &_val);
+        std::stringstream ss;
+        ss << _val.value.integer;
+        return ss.str();
+    }
+
+    std::string vector()
+    {
+        std::memset(&_val,0,sizeof(_val));
+        _val.format    = vpiVectorVal;
+        vpi_get_value(_handle, &_val);
+        std::stringstream ss;
+        int a = _val.value.vector[0].aval;
+        int b = _val.value.vector[0].bval;
+        for(unsigned int i=0; i<width(); i++) {
+            if((b & 1)==0) {
+                ss << ((a & 1) ? "1" : "0");
+            } else {
+                ss << ((a & 1) ? "x" : "z");
+            }
+            a >>= 1;
+            b >>= 1;
+        }
+        return ss.str();
+    }
+    
+    bool readb() {
+        std::memset(&_val,0,sizeof(_val));
+        std::memset(&_time,0,sizeof(_time));
+        _val.format    = vpiBinStrVal;
+
+        //_val.format    = vpiObjTypeVal;
+
+        //_val.value.str = (char*)malloc(1024);
+        //_val.value.str = const_cast<char*>((b) ? "1" : "0");
+        // _val.format = vpiIntVal;
+        // _val.value.integer = b;
+        vpi_get_value(_handle, &_val);
+        std::cout << "str=" << _val.value.str << std::endl;
+        return (bool)_val.value.str;
+    }
+
+    std::string read() {
+        return "bin: " + binstr() + 
+            ", hex: " + hexstr() +
+            ", scalar: " + scalar() +
+            ", int: " + integer()+
+            ", vec: " + vector();
+    }
+
+    std::string to_str() const
+    {
+        return "";
+    }
+
+};
+
+
 /*
 class Port: public VPIObject
 {
@@ -185,6 +301,7 @@ private:
     std::vector<Module::ptr> _modules;
     //std::vector<Port::ptr> _ports;
     std::vector<Reg::ptr> _regs;
+    std::vector<Wire::ptr> _wires;
 
     //ctor
     // Module(vpiHandle h): VPIObject(h)
@@ -197,6 +314,7 @@ public:
 
     //Port::ptr get_port(std::string name) const;
     Reg::ptr get_reg(std::string name) const;
+    Wire::ptr get_wire(std::string name) const;
 };
 
 #endif
