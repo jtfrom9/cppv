@@ -43,7 +43,7 @@ public:
     virtual void registerCallback( const SimulatorCallback* cb, vpi_descriptor *desc ) const = 0;
 
     static void scanRegs( std::vector<Reg::ptr>& regs, const VPIObject& vpiObj );
-    static void scanPorts( std::vector<Port::ptr>& ports, const VPIObject& vpiObj );
+    //static void scanPorts( std::vector<Port::ptr>& ports, const VPIObject& vpiObj );
     static void scanModules( std::vector<Module::ptr>& mods, const VPIObject* obj=0 );
 
     static Simulator* create();

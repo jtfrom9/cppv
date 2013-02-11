@@ -79,6 +79,7 @@ void Simulator::scanRegs( vector<Reg::ptr>& regs, const VPIObject& vpiObj )
 }
 
 // static
+/*
 void Simulator::scanPorts( vector<Port::ptr>& ports, const VPIObject& vpiObj )
 {
     vpiHandle iter = vpi_iterate(vpiPort, vpiObj.handle());
@@ -89,6 +90,7 @@ void Simulator::scanPorts( vector<Port::ptr>& ports, const VPIObject& vpiObj )
         ports.push_back( Port::create(ph) );
     }
 }
+*/
 
 // static
 void Simulator::scanModules( vector<Module::ptr>& mods, const VPIObject* obj ) 

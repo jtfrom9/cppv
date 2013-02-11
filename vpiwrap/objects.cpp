@@ -21,6 +21,7 @@ string Reg::to_str() const {
     return ss.str();
 }
 
+/*
 string Port::to_str() const {
     stringstream ss;
     ss << name() << "["
@@ -30,16 +31,18 @@ string Port::to_str() const {
        << "]";
     return ss.str();
 }
+*/
 
 // ctor
 Module::Module(vpiHandle h): VPIObject(h)
 {
+    /*
     try {
         Simulator::scanPorts(_ports, *this);
     } 
     catch(const SimulatorError& e) {
         // Do Nothing
-    }
+        }*/
     try {
         Simulator::scanRegs(_regs, *this);
     }
@@ -57,9 +60,10 @@ Module::Module(vpiHandle h): VPIObject(h)
 string Module::to_str() const {
     stringstream ss;
     ss << "(";
+    /*
     for(vector<Port::ptr>::const_iterator p = _ports.begin(); p!=_ports.end(); ++p) {
         ss << (*p)->to_str() << ", ";
-    }
+        }*/
     for(vector<Reg::ptr>::const_iterator r = _regs.begin(); r!=_regs.end(); ++r) {
         ss << (*r)->to_str() << ", ";
     }
@@ -67,6 +71,7 @@ string Module::to_str() const {
     return ss.str();
 }
 
+/*
 Port::ptr Module::get_port(string name) const {
     vector<Port::ptr>::const_iterator pp;
     if ((pp = find_if( _ports.begin(), _ports.end(), VPIObject::predNameOf(name) )) == _ports.end()) {
@@ -74,6 +79,7 @@ Port::ptr Module::get_port(string name) const {
     }
     return *pp;
 }
+*/
 
 Reg::ptr Module::get_reg(string name) const {
     vector<Reg::ptr>::const_iterator pp;

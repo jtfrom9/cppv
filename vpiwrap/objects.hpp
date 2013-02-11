@@ -107,6 +107,7 @@ public:
 };
 
 
+/*
 class Port: public VPIObject
 {
 private:
@@ -169,6 +170,7 @@ public:
     // overrides
     std::string to_str() const;
 };
+*/
 
 class Module: public VPIObject
 {
@@ -181,7 +183,7 @@ public:
 
 private:
     std::vector<Module::ptr> _modules;
-    std::vector<Port::ptr> _ports;
+    //std::vector<Port::ptr> _ports;
     std::vector<Reg::ptr> _regs;
 
     //ctor
@@ -193,10 +195,9 @@ public:
     // overrides
     virtual std::string to_str() const;
 
-    Port::ptr get_port(std::string name) const;
+    //Port::ptr get_port(std::string name) const;
     Reg::ptr get_reg(std::string name) const;
 };
-
 
 #endif
 
