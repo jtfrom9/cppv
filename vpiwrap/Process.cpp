@@ -1,7 +1,7 @@
 #include <list>
 #include <string>
 
-#include <boost/shared_ptr.hpp>
+#include "boost/shared_ptr.hpp"
 using boost::shared_ptr;
 
 #include "util.hpp"
@@ -25,12 +25,6 @@ protected:
     friend class Process;
 };
 
-
-void delay(int cycle)
-{
-    Process *currentProcess = ProcessManager::get().getCurrent();
-    currentProcess->delay(cycle);
-}
 
 Process::Process( const char* name ): _name(name)
 {
@@ -66,8 +60,35 @@ void Process::delay( int cycle ) {
 }
 
 // protected
-void Process::wait(ISignal signal) {
-    throw not_implemented(__func__);
-    //yield();
+void Process::wait( Process* proc ) {
+    shared_ptr<Command> p( new WaitProcessCommand(this, proc) );
+    _context->yield_send( p.get() );
 }
 
+// protected
+Process* Process::create( Process* newproc ) {
+    shared_ptr<Command> p( new CreateProcessCommand(this, newproc) );
+    _context->yield_send( p.get() );
+    return newproc;
+}
+
+// global function
+void delay( int cycle )
+{
+    Process *currentProcess = ProcessManager::get().getCurrent();
+    currentProcess->delay( cycle );
+}
+
+// global function
+void wait( Process* proc )
+{
+    Process *currentProcess = ProcessManager::get().getCurrent();
+    return currentProcess->wait( proc );
+}
+
+// global function
+Process* create( Process* proc )
+{
+    Process *currentProcess = ProcessManager::get().getCurrent();
+    return currentProcess->create( proc );
+}

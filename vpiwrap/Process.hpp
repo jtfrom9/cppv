@@ -2,15 +2,12 @@
 #define PROCESS_HPP
 
 #include "boost/noncopyable.hpp"
-
-#include "ProcessManager.hpp"
+#include "boost/shared_ptr.hpp"
 
 class Context;
 class Command;
 
 class ISignal {};
-
-void delay(int cycle);
 
 class Process: public boost::noncopyable
 {
@@ -28,18 +25,26 @@ protected:
     friend class Context;
     virtual void main() = 0;
 
-    // for global functions
-    friend void delay(int cycle);
-
-    // for inherited Process classes
-    void delay(int cycle);
-    void wait(ISignal signal);
+    void delay( int cycle );
+    void wait( Process* proc );
+    Process* create(Process* proc);
 
 public:
     // for ProcessManager
     void next();
     bool end();
     Command* receive();
+
+    // for global functions
+    friend void delay( int cycle );
+    friend void wait( Process* proc );
+    friend Process* create( Process* proc );
 };
+
+
+// global functions
+void delay( int cycle );
+void wait( Process* proc );
+Process* create( Process* proc );
 
 #endif

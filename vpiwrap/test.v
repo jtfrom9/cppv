@@ -44,18 +44,15 @@ module test(
       C <= A + B;
    end
 
-   // reg clko;
-   // always @(clk) begin
-   //    clko <= ~clk;
-   // end
    assign clko = ~clk;
 
    // always @(clko)
    //   $display($time, ": clk=%0d, clko=%0d", clk, clko);
 
-   always @(clk)
+   always @* begin
      $display($time, ": clko=%0d",clko);
-
+   end
+   
 endmodule
 
 

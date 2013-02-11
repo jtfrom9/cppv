@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include "boost/noncopyable.hpp"
+#include "boost/bind.hpp"
 
 #include "util.hpp"
 #include "Simulator.hpp"
@@ -10,7 +11,7 @@
 
 class Process;
 
-class Command: public SimulatorCallback, public boost::noncopyable
+class Command: public boost::noncopyable
 {
 protected:
     Process* _proc;
@@ -32,7 +33,7 @@ public:
 };
 
 
-class VPICommand: public Command
+class VPICommand: public Command, public SimulatorCallback
 {
 protected:
     vpi_descriptor _desc;
@@ -56,7 +57,7 @@ public:
         _cycle( cycle )
     {}
 
-    // override
+    // override (Command)
     void execute()
     {
         _desc.time.type = vpiSimTime;
@@ -73,11 +74,54 @@ public:
         _manager->getSimulator().registerCallback( this, &_desc );
     }
 
+    // override (SimulatorCallback)
     void called()
     {
         _manager->raise( _proc );
     }
 };
 
+
+class CreateProcessCommand: public Command
+{
+    Process* _newproc;
+
+public:
+    CreateProcessCommand( Process* self, Process* newproc ):
+        Command( self ), 
+        _newproc( newproc )
+    {}
+
+    // override (Command)
+    void execute()
+    {
+        _manager->add_run( _proc );
+        _manager->add( _newproc );
+    }
+};
+
+
+class WaitProcessCommand: public Command
+{
+    Process* _waitproc;
+
+public:
+    WaitProcessCommand( Process* self, Process* waitproc ):
+        Command( self ),
+        _waitproc( waitproc )
+    {}
+
+    // override (Command)
+    void execute()
+    {
+        ProcessManager::hook_handler_t f = boost::bind(&WaitProcessCommand::waithook, this);
+        _manager->addWaitHook( _waitproc,  f);
+    }
+
+    void waithook()
+    {
+        _manager->raise( _proc );
+    }
+};
 
 #endif
