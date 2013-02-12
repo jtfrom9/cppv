@@ -6,10 +6,10 @@ using boost::shared_ptr;
 
 #include "util.hpp"
 #include "Process.hpp"
-#include "Command.hpp"
+#include "Request.hpp"
 #include "generator.hpp"
 
-class Context: public generic_generator<Command*>
+class Context: public generic_generator<Request*>
 {
 private:
     Process* _proc;
@@ -46,34 +46,34 @@ bool Process::end()
     return _context->end();
 }
 
-Command* Process::receive()
+Request* Process::receive()
 {
-    Command* pcom;
+    Request* pcom;
     return _context->receive( &pcom ) ? pcom : 0;
 }
 
 // protected
 void Process::delay( int cycle ) {
-    // RAII, DelayCommand must be deleted when returning this function
-    shared_ptr<Command> p( new DelayCommand(this, cycle) );
+    // RAII, DelayRequest must be deleted when returning this function
+    shared_ptr<Request> p( new DelayRequest(this, cycle) );
     _context->yield_send( p.get() );
 }
 
 // protected
 void Process::wait( Process* proc ) {
-    shared_ptr<Command> p( new WaitProcessCommand(this, proc) );
+    shared_ptr<Request> p( new WaitProcessRequest(this, proc) );
     _context->yield_send( p.get() );
 }
 
 // protected
 void Process::wait( VPIObject::ptr obj ) {
-    shared_ptr<Command> p( new WaitValueChangeCommand(this, obj) );
+    shared_ptr<Request> p( new WaitValueChangeRequest(this, obj) );
     _context->yield_send( p.get() );
 }
 
 // protected
 Process* Process::create( Process* newproc ) {
-    shared_ptr<Command> p( new CreateProcessCommand(this, newproc) );
+    shared_ptr<Request> p( new CreateProcessRequest(this, newproc) );
     _context->yield_send( p.get() );
     return newproc;
 }

@@ -7,7 +7,7 @@
 #include "objects.hpp"
 
 class Context;
-class Command;
+class Request;
 
 class ISignal {};
 
@@ -36,7 +36,7 @@ public:
     // for ProcessManager
     void next();
     bool end();
-    Command* receive();
+    Request* receive();
 
     // for global functions
     friend void delay( int cycle );

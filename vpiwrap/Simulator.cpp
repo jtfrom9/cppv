@@ -16,7 +16,7 @@ using std::runtime_error;
 
 typedef PLI_INT32 handler_type( s_cb_data* );
 
-class Command;
+class Request;
 
 #ifdef __cplusplus
 extern "C" {

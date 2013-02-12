@@ -1,5 +1,5 @@
-#ifndef COMMAND_HPP
-#define COMMAND_HPP
+#ifndef REQUEST_HPP
+#define REQUEST_HPP
 
 #include <cstring>
 #include <string>
@@ -14,18 +14,18 @@
 
 class Process;
 
-class Command: public boost::noncopyable
+class Request: public boost::noncopyable
 {
 protected:
     Process* _proc;
     ProcessManager* _manager;
 
 public:
-    Command( Process* proc ):
+    Request( Process* proc ):
         _proc(proc)
     {}
 
-    virtual ~Command() 
+    virtual ~Request() 
     {}
 
     void setManager( ProcessManager* manager )
@@ -37,31 +37,31 @@ public:
 };
 
 
-class VPICommand: public Command, public SimulatorCallback
+class VPIRequest: public Request, public SimulatorCallback
 {
 protected:
     vpi_descriptor _desc;
 
 public:
-    VPICommand( Process* proc ):
-        Command( proc )
+    VPIRequest( Process* proc ):
+        Request( proc )
     {
         memset(&_desc, 0, sizeof(_desc));
     }
 };
 
 
-class DelayCommand: public VPICommand
+class DelayRequest: public VPIRequest
 {
     int _cycle;
 
 public:
-    DelayCommand( Process* proc, int cycle ): 
-        VPICommand( proc ),
+    DelayRequest( Process* proc, int cycle ): 
+        VPIRequest( proc ),
         _cycle( cycle )
     {}
 
-    // override (Command)
+    // override (Request)
     void execute()
     {
         _desc.time.type = vpiSimTime;
@@ -85,36 +85,28 @@ public:
     }
 
     const char* dump() {
-        return (std::string("DelayCommand: proc=") + _proc->name()).c_str();
+        return (std::string("DelayRequest: proc=") + _proc->name()).c_str();
     }
 
     std::string to_str() { return std::string(dump()); }
 };
 
-class WaitValueChangeCommand: public VPICommand
+class WaitValueChangeRequest: public VPIRequest
 {
     VPIObject::ptr _obj;
 
 public:
-    WaitValueChangeCommand( Process* proc, VPIObject::ptr obj ):
-        VPICommand( proc ),
+    WaitValueChangeRequest( Process* proc, VPIObject::ptr obj ):
+        VPIRequest( proc ),
         _obj( obj )
     {}
 
     void execute() 
     {
-        _desc.time.type = vpiSimTime;
-        _desc.time.high = 0;
-        _desc.time.low  = 10;
-        //_desc.time = {vpiSimTime};
-
-        // _desc.value.format = vpiSimTime;
-        _desc.value = {vpiBinStrVal};
-
+        _desc.time          = { vpiSimTime };
+        _desc.value         = { vpiBinStrVal };
         _desc.cbdata.reason = cbValueChange;
         _desc.cbdata.obj    = _obj->handle();
-        //_desc.cbdata.time   = &_desc.time;
-        //_desc.cbdata.value  = &_desc.value;
         _desc.cbdata.value  = NULL;
         _manager->getSimulator().registerCallback( this, &_desc );
     }
@@ -126,48 +118,48 @@ public:
     }
     
     const char* dump() {
-        return (std::string("WaitValueChangeCommand: proc=") + _proc->name()).c_str();
+        return (std::string("WaitValueChangeRequest: proc=") + _proc->name()).c_str();
     }
 
     std::string to_str() { return std::string(dump()); }
 };
 
 
-class CreateProcessCommand: public Command
+class CreateProcessRequest: public Request
 {
     Process* _newproc;
 
 public:
-    CreateProcessCommand( Process* self, Process* newproc ):
-        Command( self ), 
+    CreateProcessRequest( Process* self, Process* newproc ):
+        Request( self ), 
         _newproc( newproc )
     {}
 
-    // override (Command)
+    // override (Request)
     void execute()
     {
         _manager->add_run( _proc );
         _manager->add( _newproc );
     }
 
-    std::string to_str() { return std::string("CreateProcessCommand: proc=") + _newproc->name(); }
+    std::string to_str() { return std::string("CreateProcessRequest: proc=") + _newproc->name(); }
 };
 
 
-class WaitProcessCommand: public Command
+class WaitProcessRequest: public Request
 {
     Process* _waitproc;
 
 public:
-    WaitProcessCommand( Process* self, Process* waitproc ):
-        Command( self ),
+    WaitProcessRequest( Process* self, Process* waitproc ):
+        Request( self ),
         _waitproc( waitproc )
     {}
 
-    // override (Command)
+    // override (Request)
     void execute()
     {
-        ProcessManager::hook_handler_t f = boost::bind(&WaitProcessCommand::waithook, this);
+        ProcessManager::hook_handler_t f = boost::bind(&WaitProcessRequest::waithook, this);
         _manager->addWaitHook( _waitproc,  f);
     }
 
@@ -176,7 +168,7 @@ public:
         _manager->raise( _proc );
     }
 
-    std::string to_str() { return std::string("WaitProcessCommand: proc=") + _waitproc->name(); }
+    std::string to_str() { return std::string("WaitProcessRequest: proc=") + _waitproc->name(); }
 };
 
 #endif

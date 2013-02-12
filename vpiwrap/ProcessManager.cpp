@@ -18,7 +18,7 @@ using boost::thread;
 #include "util.hpp"
 #include "Process.hpp"
 #include "ProcessManager.hpp"
-#include "Command.hpp"
+#include "Request.hpp"
 #include "generator.hpp"
 
 class ProcessManagerImpl: public ProcessManager
@@ -112,7 +112,7 @@ void ProcessManagerImpl::add_end( Process* proc )
 // private
 void ProcessManagerImpl::switch_to( Process* proc )
 {
-    Command* command;
+    Request* req;
 
     //cout << __func__ << ": " << proc->name() << " entered." << endl;
     
@@ -126,12 +126,12 @@ void ProcessManagerImpl::switch_to( Process* proc )
     
     //cout << __func__ << ": " << proc->name() << " yield." << endl;
 
-    if((command = proc->receive()) !=0 ) {
-        //cout << __func__ << ": " << proc->name() << " recv=" << command->to_str() << endl;
+    if((req = proc->receive()) !=0 ) {
+        //cout << __func__ << ": " << proc->name() << " recv=" << req->to_str() << endl;
 
-        command->setManager( this );
+        req->setManager( this );
         // do request from Process by yield_send() methods
-        command->execute();
+        req->execute();
     }
 }
 
