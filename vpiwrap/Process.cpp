@@ -66,6 +66,12 @@ void Process::wait( Process* proc ) {
 }
 
 // protected
+void Process::wait( VPIObject::ptr obj ) {
+    shared_ptr<Command> p( new WaitValueChangeCommand(this, obj) );
+    _context->yield_send( p.get() );
+}
+
+// protected
 Process* Process::create( Process* newproc ) {
     shared_ptr<Command> p( new CreateProcessCommand(this, newproc) );
     _context->yield_send( p.get() );
@@ -84,6 +90,13 @@ void wait( Process* proc )
 {
     Process *currentProcess = ProcessManager::get().getCurrent();
     return currentProcess->wait( proc );
+}
+
+// global function
+void wait( VPIObject::ptr obj )
+{
+    Process *currentProcess = ProcessManager::get().getCurrent();
+    return currentProcess->wait( obj );
 }
 
 // global function

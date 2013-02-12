@@ -4,6 +4,8 @@
 #include "boost/noncopyable.hpp"
 #include "boost/shared_ptr.hpp"
 
+#include "objects.hpp"
+
 class Context;
 class Command;
 
@@ -27,6 +29,7 @@ protected:
 
     void delay( int cycle );
     void wait( Process* proc );
+    void wait( VPIObject::ptr obj );
     Process* create(Process* proc);
 
 public:
@@ -38,6 +41,7 @@ public:
     // for global functions
     friend void delay( int cycle );
     friend void wait( Process* proc );
+    friend void wait( VPIObject::ptr obj );
     friend Process* create( Process* proc );
 };
 
@@ -45,6 +49,7 @@ public:
 // global functions
 void delay( int cycle );
 void wait( Process* proc );
+void wait( VPIObject::ptr proc );
 Process* create( Process* proc );
 
 #endif

@@ -22,14 +22,26 @@ public:
 
 class SimulatorCallback 
 {
+    vpiHandle _cbh;
+
 public:
-    virtual void called() = 0;
+    virtual void called()      = 0;
+    virtual const char* dump() = 0;
+    int count;
+
+    void setCbHandle( vpiHandle h ) {
+        _cbh = h;
+    }
+    vpiHandle cbHandle() const {
+        return _cbh;
+    }
 };
 
 struct vpi_descriptor
 {
     s_cb_data cbdata;
     s_vpi_time time;
+    s_vpi_value value;
 };
 
 class Simulator: public boost::noncopyable
@@ -40,7 +52,8 @@ public:
     virtual Module& getModule( int index ) const           = 0;
     virtual Module& getModule( const char* path ) const    = 0;
 
-    virtual void registerCallback( const SimulatorCallback* cb, vpi_descriptor *desc ) const = 0;
+    virtual void registerCallback( SimulatorCallback* cb, vpi_descriptor *desc ) const = 0;
+    virtual void unregisterCallback( SimulatorCallback* cb ) const = 0;
 
     static void scanRegs( std::vector<Reg::ptr>& regs, const VPIObject& vpiObj );
     //static void scanPorts( std::vector<Port::ptr>& ports, const VPIObject& vpiObj );

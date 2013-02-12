@@ -102,3 +102,12 @@ Wire::ptr Module::get_wire(std::string name) const {
     }
     return *pw;
 }
+
+Module::ptr Module::get_module(std::string name) const {
+    vector<Module::ptr>::const_iterator pm;
+    if ((pm = find_if( _modules.begin(), _modules.end(), VPIObject::predNameOf(name) )) == _modules.end()) {
+        throw runtime_error("get_module: not found: " + name);
+    }
+    return *pm;
+
+}

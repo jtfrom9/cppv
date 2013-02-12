@@ -1,7 +1,8 @@
-#include <stdexcept>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <algorithm>
+#include <stdexcept>
 
 #include "util.hpp"
 #include "objects.hpp"
@@ -9,27 +10,60 @@
 
 using std::string;
 using std::vector;
+using std::stringstream;
 using std::invalid_argument;
 using std::runtime_error;
 
 typedef PLI_INT32 handler_type( s_cb_data* );
 
+class Command;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*
+static const char* cbdata_str( s_cb_data* pcbdata )
+{
+    stringstream ss;
+    ss << "reson=" << pcbdata->reason << ", "
+       << "time.type=" << pcbdata->time->type << ", ";
+    if (pcbdata->value!=0) {
+        ss << "value.format=" << pcbdata->value->format << ", "
+           << "value=" << pcbdata->value->value.str;
+    }
+    return ss.str().c_str();
+}
+*/
+
 static void __handler( s_cb_data* pcbdata )
 {
     SimulatorCallback* cb = (SimulatorCallback*)pcbdata->user_data;
-    cb->called();
+    //cout << format("cb[%d] called. cb=%x, %s") % cb->count % cb % cbdata_str(pcbdata) << endl;
+    try {
+        cb->called();
+    } catch(const std::exception& e) {
+        cout << e.what() << endl;
+    }
 }
+
+#ifdef __cplusplus
+}
+#endif
+
 
 class SimulatorImpl: public Simulator
 {
 private:
     vector<Module::ptr> _modules;
+    mutable int count;
 
 public:
     // ctor
     SimulatorImpl() 
     {
         Simulator::scanModules(_modules);
+        count = 0;
     }
 
     VPIObject& getObject(const char* path) const
@@ -56,12 +90,35 @@ public:
         return **pm;
     }
 
-    void registerCallback( const SimulatorCallback* cb, vpi_descriptor *desc ) const
+    void registerCallback( SimulatorCallback* cb, vpi_descriptor *desc ) const
     {
         desc->cbdata.cb_rtn    = (handler_type*)__handler;
         desc->cbdata.user_data = (PLI_BYTE8*)cb;
         desc->cbdata.time      = &desc->time;
-        vpi_register_cb( &desc->cbdata );
+        desc->cbdata.value     = &desc->value;
+
+        //cout << format("cb[%d] registered. cb=%x, %s") % count % cb % cbdata_str(&desc->cbdata) << endl;
+        //const_cast<SimulatorCallback*>(cb)->count = count;
+        //count++;
+        
+        vpiHandle cbh;
+        if((cbh = vpi_register_cb( &desc->cbdata )) == NULL) {
+            s_vpi_error_info error;
+            if(vpi_chk_error(&error)) {
+                throw SimulatorError(string(__func__) + ": fail to vpi_register_cb: " + error.message);
+            }
+        }
+        cb->setCbHandle( cbh );
+    }
+
+    void unregisterCallback( SimulatorCallback* cb ) const
+    {
+        if( vpi_remove_cb(cb->cbHandle())==0 ) {
+            s_vpi_error_info error;
+            if(vpi_chk_error(&error)) {
+                throw SimulatorError(string(__func__) + ": fail to vpi_remove_cb: " + error.message);
+            }
+        }
     }
 };
 

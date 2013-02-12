@@ -7,7 +7,7 @@ endif
 CFLAGS += -I$(VCS_HOME)/include
 
 simbuild: compile
-	vcs +vpi +cli test.v -load $(TARGET):initialCallback 
+	vcs +vpi +v2k -debug_pp +cli test.v -load $(TARGET):initialCallback 
 
 run: simbuild
 	LD_LIBRARY_PATH=$(shell pwd) simv -l simv.log 

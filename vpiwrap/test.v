@@ -45,6 +45,12 @@ module test(
    end
 
    assign clko = ~clk;
+   // reg clko;
+   // always @(clk) begin
+   //    #1;
+   //    clko <= ~clk;
+   // end
+   
 
    // always @(clko)
    //   $display($time, ": clk=%0d, clko=%0d", clk, clko);

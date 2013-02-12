@@ -96,7 +96,7 @@ public:
         // _val.value.integer = b;
         _time.type = vpiSimTime;
         _time.high = 0;
-        _time.low  = 1;
+        _time.low  = 0;
         _time.real = 0.0;
         //vpi_put_value(_handle, &_val, &_time, vpiInertialDelay);
         //vpi_put_value(_handle, &_val, &_time, vpiTransportDelay);
@@ -315,6 +315,7 @@ public:
     //Port::ptr get_port(std::string name) const;
     Reg::ptr get_reg(std::string name) const;
     Wire::ptr get_wire(std::string name) const;
+    Module::ptr get_module(std::string name) const;
 };
 
 #endif

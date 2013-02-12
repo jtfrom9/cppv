@@ -12,7 +12,8 @@ using std::map;
 using std::invalid_argument;
 using std::runtime_error;
 
-#include "boost/function.hpp"
+#include "boost/thread.hpp"
+using boost::thread;
 
 #include "util.hpp"
 #include "Process.hpp"
@@ -112,6 +113,8 @@ void ProcessManagerImpl::add_end( Process* proc )
 void ProcessManagerImpl::switch_to( Process* proc )
 {
     Command* command;
+
+    //cout << __func__ << ": " << proc->name() << " entered." << endl;
     
     _current = proc;
     try {
@@ -121,7 +124,11 @@ void ProcessManagerImpl::switch_to( Process* proc )
     }
     _current = 0;
     
+    //cout << __func__ << ": " << proc->name() << " yield." << endl;
+
     if((command = proc->receive()) !=0 ) {
+        //cout << __func__ << ": " << proc->name() << " recv=" << command->to_str() << endl;
+
         command->setManager( this );
         // do request from Process by yield_send() methods
         command->execute();
@@ -132,6 +139,8 @@ void ProcessManagerImpl::switch_to( Process* proc )
 void ProcessManagerImpl::schedule()
 {
     process_container temp;
+
+    //cout << __func__ << ": " << "entered." << endl;
 
     while(!_run_processes.empty()) {
             
@@ -153,6 +162,8 @@ void ProcessManagerImpl::schedule()
                 add_end( proc );
         }
     }
+
+    //cout << __func__ << ": " << "exit." << endl;
 }
     
 // public override

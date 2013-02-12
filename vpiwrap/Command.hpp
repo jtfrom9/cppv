@@ -2,10 +2,13 @@
 #define COMMAND_HPP
 
 #include <cstring>
+#include <string>
+
 #include "boost/noncopyable.hpp"
 #include "boost/bind.hpp"
 
 #include "util.hpp"
+#include "objects.hpp"
 #include "Simulator.hpp"
 #include "ProcessManager.hpp"
 
@@ -30,6 +33,7 @@ public:
         _manager = manager;
     }
     virtual void execute() = 0;
+    virtual std::string to_str() = 0;
 };
 
 
@@ -79,6 +83,53 @@ public:
     {
         _manager->raise( _proc );
     }
+
+    const char* dump() {
+        return (std::string("DelayCommand: proc=") + _proc->name()).c_str();
+    }
+
+    std::string to_str() { return std::string(dump()); }
+};
+
+class WaitValueChangeCommand: public VPICommand
+{
+    VPIObject::ptr _obj;
+
+public:
+    WaitValueChangeCommand( Process* proc, VPIObject::ptr obj ):
+        VPICommand( proc ),
+        _obj( obj )
+    {}
+
+    void execute() 
+    {
+        _desc.time.type = vpiSimTime;
+        _desc.time.high = 0;
+        _desc.time.low  = 10;
+        //_desc.time = {vpiSimTime};
+
+        // _desc.value.format = vpiSimTime;
+        _desc.value = {vpiBinStrVal};
+
+        _desc.cbdata.reason = cbValueChange;
+        _desc.cbdata.obj    = _obj->handle();
+        //_desc.cbdata.time   = &_desc.time;
+        //_desc.cbdata.value  = &_desc.value;
+        _desc.cbdata.value  = NULL;
+        _manager->getSimulator().registerCallback( this, &_desc );
+    }
+
+    void called()
+    {
+        _manager->getSimulator().unregisterCallback( this );
+        _manager->raise( _proc );
+    }
+    
+    const char* dump() {
+        return (std::string("WaitValueChangeCommand: proc=") + _proc->name()).c_str();
+    }
+
+    std::string to_str() { return std::string(dump()); }
 };
 
 
@@ -98,6 +149,8 @@ public:
         _manager->add_run( _proc );
         _manager->add( _newproc );
     }
+
+    std::string to_str() { return std::string("CreateProcessCommand: proc=") + _newproc->name(); }
 };
 
 
@@ -122,6 +175,8 @@ public:
     {
         _manager->raise( _proc );
     }
+
+    std::string to_str() { return std::string("WaitProcessCommand: proc=") + _waitproc->name(); }
 };
 
 #endif

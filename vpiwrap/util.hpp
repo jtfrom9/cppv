@@ -8,6 +8,9 @@
 using std::cout;
 using std::endl;
 
+#include "boost/format.hpp"
+using boost::format;
+
 class not_implemented: public std::runtime_error
 {
 public:
