@@ -14,7 +14,7 @@ using boost::format;
 void clkgen() {
     Reg* clk = top().get_reg("clk");
 
-    for(int i=0; i<5; i++) {
+    for(int i=0; i<10; i++) {
         delay(10);
         clk->write(0);
         delay(10);
@@ -25,8 +25,8 @@ void clkgen() {
 
 void monitor() {
     Wire* clko = top().get_wire("clko");
-    //for(int i=0; i<10; i++) {
-    while(true) {
+    for(int i=0; i<10; i++) {
+        //while(true) {
         wait(clko);
         cout << format("time: %4d, clko=%s") % sim_time() % clko->readvec() 
              << endl;
@@ -35,7 +35,7 @@ void monitor() {
 
 void monitor2() {
     Wire* C = top().get_wire("C");
-    while(true) {
+    for(int i=0; i<3; i++) {
         wait(C);
         cout << format("time: %4d, C=%s") % sim_time() % C->readvec()
              << endl;

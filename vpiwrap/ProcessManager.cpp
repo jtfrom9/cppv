@@ -82,6 +82,7 @@ private:
         //cout << __func__ << ": " << proc->name() << " entered." << endl;
     
         _current = proc;
+        //cout << dump() << endl;
         try {
             proc->next();// context switch
         } catch( const stop_iteration& e ) {
@@ -104,7 +105,6 @@ public:
     void schedule()
     {
         //cout << __func__ << ": " << "entered." << endl;
-        //cout << dump() << endl;
 
         while(!_run_list.empty()) {
             
@@ -114,7 +114,9 @@ public:
                 _run_list.pop_front();
                 _active_list.push_back( proc );
             }
-            
+
+            process_container temp_end_list;
+
             // run all processes
             while(!_active_list.empty()) {
                 Process* proc = _active_list.front();
@@ -123,9 +125,15 @@ public:
                 switch_to( proc );
         
                 if( proc->end() ) {
-                    _end_list.push_back( proc ); // to end list
-                    call_hook( proc );
+                    temp_end_list.push_back( proc ); // to end list
                 }
+            }
+
+            while(!temp_end_list.empty()) {
+                Process* proc = temp_end_list.front();
+                temp_end_list.pop_front();
+                _end_list.push_back( proc );
+                call_hook( proc );
             }
         }
 
@@ -165,21 +173,23 @@ public:
     }
 
 private:
-    const char* dump() const
-    {
-        stringstream ss;
-        ss << "cur: " << ((_current!=0) ? _current->name() : "-");
-        ss << ", active: {";
-        BOOST_FOREACH( Process* p, _active_list ) { ss << p->name() << ","; }
-        ss << "} run: { ";
-        BOOST_FOREACH( Process* p, _run_list ) { ss << p->name() << ","; }
-        ss << "} end: { ";
-        BOOST_FOREACH( Process* p, _end_list ) { ss << p->name() << ","; }
-        ss << "}";
-        return ss.str().c_str();
-    }
+    const char* dump() const;
 
 }; // ProcessManagerImpl
+
+const char* ProcessManagerImpl::dump() const
+{
+    stringstream ss;
+    ss << "cur: " << ((_current!=0) ? _current->name() : "-");
+    ss << ", active: {";
+    BOOST_FOREACH( Process* p, _active_list ) { ss << p->name() << ","; }
+    ss << "} run: { ";
+    BOOST_FOREACH( Process* p, _run_list ) { ss << p->name() << ","; }
+    ss << "} end: { ";
+    BOOST_FOREACH( Process* p, _end_list ) { ss << p->name() << ","; }
+    ss << "}";
+    return ss.str().c_str();
+}
 
 
 static ProcessManagerImpl* managerInst = 0;

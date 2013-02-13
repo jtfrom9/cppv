@@ -140,8 +140,13 @@ public:
     // override (Request)
     void execute()
     {
-        _manager->addHook( _waitproc, 
-                           boost::bind( &WaitProcessRequest::waithook, this ) );
+        if ( _waitproc->end() ) {
+            // already end.
+            _manager->run( _proc );
+        } else {
+            _manager->addHook( _waitproc, 
+                               boost::bind( &WaitProcessRequest::waithook, this ) );
+        }
     }
 
     void waithook()
