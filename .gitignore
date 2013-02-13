@@ -1,0 +1,9 @@
+*.o
+*~
+makefile.dep
+GTAGS
+GPATH
+GRTAGS
+GSYMS
+*.so
+*.vpi
