@@ -26,7 +26,7 @@ public:
 protected:
     void main() {
         const Simulator& sim = ProcessManager::get().getSimulator();
-        Reg::ptr clk = sim.getModule(0).get_reg("clk");
+        Reg* clk = sim.getModule(0).get_reg("clk");
 
         for(int i=0; i<5; i++) {
             delay(10);
@@ -45,7 +45,7 @@ public:
 protected:
     void main() {
         const Simulator& sim = ProcessManager::get().getSimulator();
-        Wire::ptr clko = sim.getModule(0).get_wire("clko");
+        Wire* clko = sim.getModule(0).get_wire("clko");
         // for(int i=0; i<10; i++) {
         while(true) {
             wait(clko);

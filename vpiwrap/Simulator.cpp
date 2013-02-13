@@ -20,7 +20,7 @@ class Request;
 class SimulatorImpl: public Simulator
 {
 private:
-    vector<Module::ptr> _modules;
+    vector<Module*> _modules;
     mutable int count;
 
     struct vpi_timer_event_descriptor
@@ -66,7 +66,7 @@ public:
 
     Module& getModule( const char* path ) const
     {
-        vector<Module::ptr>::const_iterator pm;
+        vector<Module*>::const_iterator pm;
         if((pm = std::find_if(_modules.begin(), _modules.end(), VPIObject::predNameOf(path))) == _modules.end()) {
             throw invalid_argument(string(__func__) + ": not found: " + path);
         }
@@ -125,32 +125,32 @@ public:
 
 
 // static
-void Simulator::scanRegs( vector<Reg::ptr>& regs, const VPIObject& vpiObj )
+void Simulator::scanRegs( vector<Reg*>& regs, const VPIObject& vpiObj )
 {
     vpiHandle iter = vpi_iterate(vpiReg, vpiObj.handle());
     vpiHandle ph;
     if(iter==NULL) 
         throw SimulatorError(string(__func__) + ": fail to scan vpiReg");
     while((ph = vpi_scan(iter)) != NULL) {
-        regs.push_back( Reg::create(ph) );
+        regs.push_back( new Reg(ph) );
     }
 }
 
 // static
-void Simulator::scanWires( vector<Wire::ptr>& wires, const VPIObject& vpiObj )
+void Simulator::scanWires( vector<Wire*>& wires, const VPIObject& vpiObj )
 {
     vpiHandle iter = vpi_iterate(vpiNet, vpiObj.handle());
     vpiHandle ph;
     if(iter==NULL) 
         throw SimulatorError(string(__func__) + ": fail to scan vpiWire");
     while((ph = vpi_scan(iter)) != NULL) {
-        wires.push_back( Wire::create(ph) );
+        wires.push_back( new Wire(ph) );
     }
 }
 
 // static
 /*
-void Simulator::scanPorts( vector<Port::ptr>& ports, const VPIObject& vpiObj )
+void Simulator::scanPorts( vector<Port*>& ports, const VPIObject& vpiObj )
 {
     vpiHandle iter = vpi_iterate(vpiPort, vpiObj.handle());
     vpiHandle ph;
@@ -163,7 +163,7 @@ void Simulator::scanPorts( vector<Port::ptr>& ports, const VPIObject& vpiObj )
 */
 
 // static
-void Simulator::scanModules( vector<Module::ptr>& mods, const VPIObject* obj ) 
+void Simulator::scanModules( vector<Module*>& mods, const VPIObject* obj ) 
 {
     vpiHandle mod_iter = vpi_iterate(vpiModule, (obj==0) ? NULL : obj->handle());
         
@@ -174,7 +174,7 @@ void Simulator::scanModules( vector<Module::ptr>& mods, const VPIObject* obj )
         vpiHandle modh;
         if((modh = vpi_scan(mod_iter)) == NULL)
             break;
-        mods.push_back(Module::create(modh));
+        mods.push_back( new Module(modh) );
     }
 }
 

@@ -77,18 +77,16 @@ public:
 
 class WaitValueChangeRequest: public Request, public SimulatorCallback
 {
-    VPIObject::ptr _obj;
+    VPIObject* _obj;
 
 public:
-    WaitValueChangeRequest( Process* proc, VPIObject::ptr obj ):
+    WaitValueChangeRequest( Process* proc, VPIObject* obj ):
         Request( proc ),
         _obj( obj )
     {}
 
     virtual ~WaitValueChangeRequest()
-    {
-        _obj->unsetCallback( this );
-    }
+    {}
 
     void execute() 
     {

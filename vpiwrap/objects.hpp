@@ -9,60 +9,127 @@
 #include <sstream>
 
 #include "boost/noncopyable.hpp"
-#include "boost/shared_ptr.hpp"
 
+#include "Simulator.hpp"
 #include "vpi_user.h"
-
-
-class SimulatorCallback;
 
 class VPIObject: private boost::noncopyable
 {
 private:
     vpiHandle _cbhandle;
+
     typedef std::list<SimulatorCallback*> callbacks_container;
     callbacks_container _callbacks;
-    
+
+private:
+    s_vpi_value _val;
+    s_vpi_time  _time;
+
 protected:
     vpiHandle _handle;
     
     // ctor
-    VPIObject(vpiHandle h): _handle(h) 
+    VPIObject(vpiHandle h): 
+        _handle(h) 
     {}
 
     // dtor
-    virtual ~VPIObject() {
+    virtual ~VPIObject() 
+    {
         //vpi_release_handle( _handle );
     }
 
+    PLI_INT32 __vpi_get(PLI_INT32 prop, const char* fname) const
+    {
+        PLI_INT32 v = vpi_get(prop, _handle);
+        if(v==vpiUndefined) {
+            throw SimulatorError(std::string(fname) + ": error vpi_get @" + name());
+        }
+        return v;
+    }
+#define _vpi_get(prop) __vpi_get(prop,__func__)
+
 public:
-
-    // VPIType type() {
-    //     vpi_get(vpiType,_handle);
-    // }
-    const vpiHandle handle() const { return _handle; }
-
-    const char* type_str() const {
-        return vpi_get_str(vpiType, _handle);
-    }
-    int type() const {
-        return vpi_get(vpiType, _handle);
-    }
-
-    const char* name() const {
-        return vpi_get_str(vpiName, _handle);
-    }
-
-    const char* fullname() const {
-        return vpi_get_str(vpiFullName, _handle);
+    const vpiHandle handle() const 
+    { 
+        return _handle; 
     }
     
+    virtual const char* type_cstr() const = 0;
+
+    const std::string vpi_type_str() const 
+    {
+        return std::string(vpi_get_str(vpiType, _handle));
+    }
+
+    const char* vpi_type_cstr() const
+    {
+        return vpi_type_str().c_str();
+    }
+
+    int vpi_type() const 
+    {
+        return (int)_vpi_get(vpiType);
+    }
+
+    std::string name() const 
+    {
+        return std::string(vpi_get_str(vpiName, _handle));
+    }
+
+    const char* namec() const
+    {
+        return name().c_str();
+    }
+
+    std::string fullname() const 
+    {
+        return std::string(vpi_get_str(vpiFullName, _handle));
+    }
+
+    const char* fullnamec() const
+    {
+        return fullname().c_str();
+    }
+
+    int width() const {
+        return (int)_vpi_get(vpiSize);
+    }
+
+    void write_nodely( bool b ) {
+        std::memset(&_val,0,sizeof(_val));
+        _val.format    = vpiBinStrVal;
+        _val.value.str = const_cast<char*>((b) ? "1" : "0");
+
+        std::memset(&_time,0,sizeof(_time));
+        _time.type = vpiSimTime;
+
+        //vpi_put_value(_handle, &_val, &_time, vpiInertialDelay);
+        //vpi_put_value(_handle, &_val, &_time, vpiTransportDelay);
+        vpi_put_value(_handle, &_val, NULL, vpiNoDelay);
+    }
+
+    void write( bool b ) { write_nodely( b ); }
+
+    bool readb() {
+        std::memset(&_val,0,sizeof(_val));
+        _val.format    = vpiBinStrVal;
+        vpi_get_value(_handle, &_val);
+        std::cout << "str=" << _val.value.str << std::endl;
+        return (bool)_val.value.str;
+    }
+
     virtual std::string to_str() const = 0;
 
+private:
     static void valueChanged( s_cb_data* );
+
+public:
     void setValueChangedCallback( SimulatorCallback* cb );
     void unsetCallback( SimulatorCallback *cb );
 
+public:
+    // functors
     class predNameOf {
     private:
         std::string _name;
@@ -74,46 +141,18 @@ public:
             return obj->name() == _name;
         }
     };
-
-    typedef boost::shared_ptr<VPIObject> ptr;
 };
 
 
 class Reg: public VPIObject
 {
-private:
-    s_vpi_value _val;
-    s_vpi_time _time;
-
+public:
     // ctor
     Reg(vpiHandle h): VPIObject(h)
     {}
 
-public:
-    typedef boost::shared_ptr<Reg> ptr;
-
-    static ptr create(vpiHandle h) {
-        return ptr(new Reg(h));
-    }
-
-    unsigned int width() const {
-        return (unsigned int)vpi_get(vpiSize, _handle);
-    }
-
-    void write(bool b) {
-        std::memset(&_val,0,sizeof(_val));
-        std::memset(&_time,0,sizeof(_time));
-        _val.format    = vpiBinStrVal;
-        _val.value.str = const_cast<char*>((b) ? "1" : "0");
-        // _val.format = vpiIntVal;
-        // _val.value.integer = b;
-        _time.type = vpiSimTime;
-        _time.high = 0;
-        _time.low  = 0;
-        _time.real = 0.0;
-        //vpi_put_value(_handle, &_val, &_time, vpiInertialDelay);
-        //vpi_put_value(_handle, &_val, &_time, vpiTransportDelay);
-        vpi_put_value(_handle, &_val, NULL, vpiNoDelay);
+    const char* type_cstr() const {
+        return "Reg";
     }
 
     // overrides
@@ -127,19 +166,13 @@ private:
     s_vpi_value _val;
     s_vpi_time _time;
 
+public:
     // ctor
     Wire(vpiHandle h): VPIObject(h)
     {}
 
-public:
-    typedef boost::shared_ptr<Wire> ptr;
-    
-    static ptr create(vpiHandle h) {
-        return ptr(new Wire(h));
-    }
-
-    unsigned int width() const {
-        return (unsigned int)vpi_get(vpiSize, _handle);
+    const char* type_cstr() const {
+        return "Wire";
     }
 
     std::string binstr()
@@ -192,7 +225,7 @@ public:
         std::stringstream ss;
         int a = _val.value.vector[0].aval;
         int b = _val.value.vector[0].bval;
-        for(unsigned int i=0; i<width(); i++) {
+        for(int i=0; i<width(); i++) {
             if((b & 1)==0) {
                 ss << ((a & 1) ? "1" : "0");
             } else {
@@ -204,22 +237,6 @@ public:
         return ss.str();
     }
     
-    bool readb() {
-        std::memset(&_val,0,sizeof(_val));
-        std::memset(&_time,0,sizeof(_time));
-        _val.format    = vpiBinStrVal;
-
-        //_val.format    = vpiObjTypeVal;
-
-        //_val.value.str = (char*)malloc(1024);
-        //_val.value.str = const_cast<char*>((b) ? "1" : "0");
-        // _val.format = vpiIntVal;
-        // _val.value.integer = b;
-        vpi_get_value(_handle, &_val);
-        std::cout << "str=" << _val.value.str << std::endl;
-        return (bool)_val.value.str;
-    }
-
     std::string read() {
         return "bin: " + binstr() + 
             ", hex: " + hexstr() +
@@ -243,22 +260,16 @@ private:
     s_vpi_value _val;
     s_vpi_time _time;
 
+public:
     // ctor
     Port(vpiHandle h): VPIObject(h)
     {}
-
-public:
-    typedef boost::shared_ptr<Port> ptr;
-
-    static ptr create(vpiHandle h) {
-        return ptr(new Port(h));
-    }
 
     int index() const { 
         return vpi_get(vpiPortIndex, _handle); 
     }
 
-    // const char* port_type_str() const {
+    // const char* port_type_cstr() const {
     //     return vpi_get_str(vpiPortType, _handle);
     // }
 
@@ -303,32 +314,30 @@ public:
 
 class Module: public VPIObject
 {
-public:
-    typedef boost::shared_ptr<Module> ptr;
-
-    static ptr create(vpiHandle h) {
-        return ptr(new Module(h));
-    }
-
 private:
-    std::vector<Module::ptr> _modules;
-    //std::vector<Port::ptr> _ports;
-    std::vector<Reg::ptr> _regs;
-    std::vector<Wire::ptr> _wires;
+    std::vector<Module*> _modules;
+    //std::vector<Port*> _ports;
+    std::vector<Reg*> _regs;
+    std::vector<Wire*> _wires;
 
+public:
     //ctor
     // Module(vpiHandle h): VPIObject(h)
     // {}
     Module(vpiHandle h);
 
-public:
+    const char* type_cstr() const 
+    {
+        return "Module";
+    }
+
     // overrides
     virtual std::string to_str() const;
 
-    //Port::ptr get_port(std::string name) const;
-    Reg::ptr get_reg(std::string name) const;
-    Wire::ptr get_wire(std::string name) const;
-    Module::ptr get_module(std::string name) const;
+    //Port* get_port(std::string name) const;
+    Reg* get_reg(std::string name) const;
+    Wire* get_wire(std::string name) const;
+    Module* get_module(std::string name) const;
 };
 
 #endif

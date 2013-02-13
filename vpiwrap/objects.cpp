@@ -68,10 +68,10 @@ string Module::to_str() const {
     stringstream ss;
     ss << "(";
     /*
-    for(vector<Port::ptr>::const_iterator p = _ports.begin(); p!=_ports.end(); ++p) {
+    for(vector<Port*>::const_iterator p = _ports.begin(); p!=_ports.end(); ++p) {
         ss << (*p)->to_str() << ", ";
         }*/
-    for(vector<Reg::ptr>::const_iterator r = _regs.begin(); r!=_regs.end(); ++r) {
+    for(vector<Reg*>::const_iterator r = _regs.begin(); r!=_regs.end(); ++r) {
         ss << (*r)->to_str() << ", ";
     }
     ss << ")";
@@ -79,8 +79,8 @@ string Module::to_str() const {
 }
 
 /*
-Port::ptr Module::get_port(string name) const {
-    vector<Port::ptr>::const_iterator pp;
+Port* Module::get_port(string name) const {
+    vector<Port*>::const_iterator pp;
     if ((pp = find_if( _ports.begin(), _ports.end(), VPIObject::predNameOf(name) )) == _ports.end()) {
         throw runtime_error("get_port: not found: " + name);
     }
@@ -88,24 +88,24 @@ Port::ptr Module::get_port(string name) const {
 }
 */
 
-Reg::ptr Module::get_reg(string name) const {
-    vector<Reg::ptr>::const_iterator pr;
+Reg* Module::get_reg(string name) const {
+    vector<Reg*>::const_iterator pr;
     if ((pr = find_if( _regs.begin(), _regs.end(), VPIObject::predNameOf(name) )) == _regs.end()) {
         throw runtime_error("get_reg: not found: " + name);
     }
     return *pr;
 }
 
-Wire::ptr Module::get_wire(std::string name) const {
-    vector<Wire::ptr>::const_iterator pw;
+Wire* Module::get_wire(std::string name) const {
+    vector<Wire*>::const_iterator pw;
     if ((pw = find_if( _wires.begin(), _wires.end(), VPIObject::predNameOf(name) )) == _wires.end()) {
         throw runtime_error("get_wire: not found: " + name);
     }
     return *pw;
 }
 
-Module::ptr Module::get_module(std::string name) const {
-    vector<Module::ptr>::const_iterator pm;
+Module* Module::get_module(std::string name) const {
+    vector<Module*>::const_iterator pm;
     if ((pm = find_if( _modules.begin(), _modules.end(), VPIObject::predNameOf(name) )) == _modules.end()) {
         throw runtime_error("get_module: not found: " + name);
     }
@@ -137,6 +137,8 @@ void VPIObject::valueChanged( s_cb_data* pcbdata )
 
     delete desc;
 
+    assert(!object->_callbacks.empty());
+
     if( vpi_remove_cb(object->_cbhandle)==0 ) {
         s_vpi_error_info error;
         if(vpi_chk_error(&error)) {
@@ -144,7 +146,17 @@ void VPIObject::valueChanged( s_cb_data* pcbdata )
         }
     }
 
-    BOOST_FOREACH( SimulatorCallback* cb, object->_callbacks ) {
+    callbacks_container temp;
+    // move to temp
+    while(!object->_callbacks.empty()) {
+        SimulatorCallback* cb = object->_callbacks.front();
+        object->_callbacks.pop_front();
+        temp.push_back( cb );
+    }
+    object->_callbacks.clear();
+
+    // hook callback handlers. by this, object->_callbacks may be re-push_back-ed.
+    BOOST_FOREACH( SimulatorCallback* cb, temp ) {
         cb->called();
     }
 }
@@ -180,6 +192,7 @@ void VPIObject::setValueChangedCallback( SimulatorCallback* cb )
 }
 
 // public
+/*
 void VPIObject::unsetCallback( SimulatorCallback *cb )
 {
     callbacks_container::iterator p = std::find( _callbacks.begin(), _callbacks.end(), cb );
@@ -195,3 +208,4 @@ void VPIObject::unsetCallback( SimulatorCallback *cb )
         }
     }
 }
+*/
