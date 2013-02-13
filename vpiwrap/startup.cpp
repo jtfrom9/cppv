@@ -30,7 +30,7 @@ int startup(s_cb_data*cpb)
     ProcessManager& m = ProcessManager::get();
     
     // register Main
-    m.add(new MainProcess());
+    m.regist(new MainProcess());
     
     // first schedule
     m.schedule(); 

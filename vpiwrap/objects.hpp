@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <list>
 #include <iostream>
 #include <sstream>
 
@@ -12,8 +13,16 @@
 
 #include "vpi_user.h"
 
+
+class SimulatorCallback;
+
 class VPIObject: private boost::noncopyable
 {
+private:
+    vpiHandle _cbhandle;
+    typedef std::list<SimulatorCallback*> callbacks_container;
+    callbacks_container _callbacks;
+    
 protected:
     vpiHandle _handle;
     
@@ -49,6 +58,10 @@ public:
     }
     
     virtual std::string to_str() const = 0;
+
+    static void valueChanged( s_cb_data* );
+    void setValueChangedCallback( SimulatorCallback* cb );
+    void unsetCallback( SimulatorCallback *cb );
 
     class predNameOf {
     private:

@@ -16,15 +16,18 @@ protected:
     {}
 
 public:
-    virtual Process* getCurrent() const = 0;
-    virtual void add( Process* proc )   = 0;
-    virtual void add_run( Process* proc )= 0;
-    virtual void schedule()             = 0;
-    virtual void raise( Process* proc ) = 0;
+    // system functions
+    virtual void schedule()              = 0;
+    virtual void raise( Process* proc )  = 0;
+    virtual void run( Process* proc )    = 0;
+
+    // user functions
+    virtual Process* getCurrent() const  = 0;
+    virtual void regist( Process* proc ) = 0;
 
     typedef boost::function<void ()> hook_handler_t;
 
-    virtual void addWaitHook( Process* waitproc, hook_handler_t cb ) = 0;
+    virtual void addHook( Process* waitproc, hook_handler_t cb ) = 0;
 
     virtual const Simulator& getSimulator() = 0;
 

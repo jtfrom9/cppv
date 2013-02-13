@@ -4,11 +4,13 @@
 #include <stdexcept>
 #include <iostream>
 #include <algorithm>
+#include <cassert>
 
 using std::cout;
 using std::endl;
 
 #include "boost/format.hpp"
+#include "boost/foreach.hpp"
 using boost::format;
 
 class not_implemented: public std::runtime_error
@@ -27,5 +29,7 @@ typename Container::value_type _find( Container& c,
     typename Container::iterator i = std::find(c.begin(), c.end(), v);
     return (i==c.end()) ? 0 : (*i);
 }
+
+
 
 #endif

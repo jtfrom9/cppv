@@ -5,13 +5,14 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "objects.hpp"
-#include "Simulator.hpp"
-
 using std::vector;
 using std::string;
 using std::stringstream;
 using std::runtime_error;
+
+#include "util.hpp"
+#include "Simulator.hpp"
+#include "objects.hpp"
 
 string Reg::to_str() const {
     stringstream ss;
@@ -110,4 +111,87 @@ Module::ptr Module::get_module(std::string name) const {
     }
     return *pm;
 
+}
+
+
+struct vpi_object_event_descriptor
+{
+    s_cb_data cbdata;
+    s_vpi_time time;
+    s_vpi_value value;
+    VPIObject* object;
+
+    vpi_object_event_descriptor()
+    {
+        memset(&cbdata,0,sizeof(cbdata));
+        memset(&time,0,sizeof(time));
+        memset(&value,0,sizeof(value));
+    }
+};
+
+// static
+void VPIObject::valueChanged( s_cb_data* pcbdata )
+{
+    vpi_object_event_descriptor* desc = (vpi_object_event_descriptor*)pcbdata->user_data;
+    VPIObject* object                 = desc->object;
+
+    delete desc;
+
+    if( vpi_remove_cb(object->_cbhandle)==0 ) {
+        s_vpi_error_info error;
+        if(vpi_chk_error(&error)) {
+            throw SimulatorError(string(__func__) + ": fail to vpi_remove_cb: " + error.message);
+        }
+    }
+
+    BOOST_FOREACH( SimulatorCallback* cb, object->_callbacks ) {
+        cb->called();
+    }
+}
+
+// public
+void VPIObject::setValueChangedCallback( SimulatorCallback* cb )
+{
+    if (_callbacks.empty()) {
+        _callbacks.push_back( cb );
+
+        vpi_object_event_descriptor* desc = new vpi_object_event_descriptor();
+        desc->time             = { vpiSuppressTime };
+        desc->value            = { vpiSuppressVal };
+        desc->cbdata.reason    = cbValueChange;
+        desc->cbdata.obj       = handle();
+        desc->cbdata.cb_rtn    = (vpi_callback_handler_t*)valueChanged;
+        desc->cbdata.user_data = (PLI_BYTE8*)desc;
+        desc->cbdata.time      = &desc->time;
+        desc->cbdata.value     = &desc->value;
+        desc->object           = this;
+
+        if((_cbhandle = vpi_register_cb( &desc->cbdata )) == NULL) {
+            s_vpi_error_info error;
+            if(vpi_chk_error(&error)) {
+                throw SimulatorError(string(__func__) + ": fail to vpi_register_cb: " + error.message);
+            }
+        }
+    } else {
+        if (_find(_callbacks, cb)==0) {
+            _callbacks.push_back( cb );
+        }
+    }
+}
+
+// public
+void VPIObject::unsetCallback( SimulatorCallback *cb )
+{
+    callbacks_container::iterator p = std::find( _callbacks.begin(), _callbacks.end(), cb );
+    if (p!=_callbacks.end()) {
+        _callbacks.erase( p );
+        if (_callbacks.empty()) {
+            if( vpi_remove_cb(_cbhandle)==0 ) {
+                s_vpi_error_info error;
+                if(vpi_chk_error(&error)) {
+                    throw SimulatorError(string(__func__) + ": fail to vpi_remove_cb: " + error.message);
+                }
+            }
+        }
+    }
 }

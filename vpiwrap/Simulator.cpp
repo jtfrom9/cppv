@@ -14,49 +14,32 @@ using std::stringstream;
 using std::invalid_argument;
 using std::runtime_error;
 
-typedef PLI_INT32 handler_type( s_cb_data* );
 
 class Request;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/*
-static const char* cbdata_str( s_cb_data* pcbdata )
-{
-    stringstream ss;
-    ss << "reson=" << pcbdata->reason << ", "
-       << "time.type=" << pcbdata->time->type << ", ";
-    if (pcbdata->value!=0) {
-        ss << "value.format=" << pcbdata->value->format << ", "
-           << "value=" << pcbdata->value->value.str;
-    }
-    return ss.str().c_str();
-}
-*/
-
-static void __handler( s_cb_data* pcbdata )
-{
-    SimulatorCallback* cb = (SimulatorCallback*)pcbdata->user_data;
-    //cout << format("cb[%d] called. cb=%x, %s") % cb->count % cb % cbdata_str(pcbdata) << endl;
-    try {
-        cb->called();
-    } catch(const std::exception& e) {
-        cout << e.what() << endl;
-    }
-}
-
-#ifdef __cplusplus
-}
-#endif
-
 
 class SimulatorImpl: public Simulator
 {
 private:
     vector<Module::ptr> _modules;
     mutable int count;
+
+    struct vpi_timer_event_descriptor
+    {
+        s_cb_data cbdata;
+        s_vpi_time time;
+        s_vpi_value value;
+        vpiHandle handle;
+        SimulatorCallback* cb;
+
+        vpi_timer_event_descriptor() 
+        {
+            memset(&cbdata,0,sizeof(cbdata));
+            memset(&time,0,sizeof(time));
+            memset(&value,0,sizeof(value));
+            time.type    = vpiSuppressTime;
+            value.format = vpiSuppressVal;
+        }
+    };
 
 public:
     // ctor
@@ -90,35 +73,53 @@ public:
         return **pm;
     }
 
-    void registerCallback( SimulatorCallback* cb, vpi_descriptor *desc ) const
+private:
+    static void timeElapsed( s_cb_data* pcbdata )
     {
-        desc->cbdata.cb_rtn    = (handler_type*)__handler;
-        desc->cbdata.user_data = (PLI_BYTE8*)cb;
-        desc->cbdata.time      = &desc->time;
-        desc->cbdata.value     = &desc->value;
+        vpi_timer_event_descriptor* desc = (vpi_timer_event_descriptor*)pcbdata->user_data;
+        SimulatorCallback *cb            = desc->cb;
+        vpiHandle handle                 = desc->handle;
 
-        //cout << format("cb[%d] registered. cb=%x, %s") % count % cb % cbdata_str(&desc->cbdata) << endl;
-        //const_cast<SimulatorCallback*>(cb)->count = count;
-        //count++;
-        
-        vpiHandle cbh;
-        if((cbh = vpi_register_cb( &desc->cbdata )) == NULL) {
-            s_vpi_error_info error;
-            if(vpi_chk_error(&error)) {
-                throw SimulatorError(string(__func__) + ": fail to vpi_register_cb: " + error.message);
-            }
-        }
-        cb->setCbHandle( cbh );
-    }
+        delete desc;
 
-    void unregisterCallback( SimulatorCallback* cb ) const
-    {
-        if( vpi_remove_cb(cb->cbHandle())==0 ) {
+        if( vpi_remove_cb(handle)==0 ) {
             s_vpi_error_info error;
             if(vpi_chk_error(&error)) {
                 throw SimulatorError(string(__func__) + ": fail to vpi_remove_cb: " + error.message);
             }
         }
+        cb->called();
+    }
+
+    void setCallback( SimulatorCallback* cb, vpi_timer_event_descriptor* desc ) const
+    {
+        desc->cbdata.cb_rtn    = (vpi_callback_handler_t*)timeElapsed;
+        desc->cbdata.user_data = (PLI_BYTE8*)desc;
+        desc->cbdata.time      = &desc->time;
+        desc->cbdata.value     = &desc->value;
+        desc->cb               = cb;
+
+        if((desc->handle = vpi_register_cb( &desc->cbdata )) == NULL) {
+            s_vpi_error_info error;
+            if(vpi_chk_error(&error)) {
+                throw SimulatorError(string(__func__) + ": fail to vpi_register_cb: " + error.message);
+            }
+        }
+    }
+
+public:
+    void setAfterDelayCallback( SimulatorCallback* cb, int delay ) const
+    {
+        vpi_timer_event_descriptor* desc = new vpi_timer_event_descriptor();
+
+        desc->time.type = vpiSimTime;
+        desc->time.high = 0;
+        desc->time.low  = delay; // currently low time only
+
+        desc->cbdata.reason    = cbAfterDelay;
+        desc->cbdata.obj       = NULL;
+
+        setCallback( cb, desc );
     }
 };
 
@@ -187,3 +188,5 @@ Simulator* Simulator::create()
     }
     return simInstance;
 }
+
+
