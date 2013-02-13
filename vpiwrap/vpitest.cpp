@@ -28,7 +28,8 @@ void monitor() {
     //for(int i=0; i<10; i++) {
     while(true) {
         wait(clko);
-        cout << format("time: %4d, clko=%s") % sim_time() % clko->readvec().to_int_str() << endl;
+        cout << format("time: %4d, clko=%s") % sim_time() % clko->readvec() 
+             << endl;
     }
 };
 
@@ -36,7 +37,7 @@ void monitor2() {
     Wire* C = top().get_wire("C");
     while(true) {
         wait(C);
-        cout << format("time: %4d, C=%s") % sim_time() % C->readvec().to_int_str() 
+        cout << format("time: %4d, C=%s") % sim_time() % C->readvec()
              << endl;
     }
 };

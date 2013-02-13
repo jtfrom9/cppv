@@ -138,7 +138,7 @@ public:
 private:
     const scalarval& get_scalar( int index ) const;
     unsigned int conv() const;
-    std::string _dump() const;
+    const std::string _dump() const;
     const char* dump() const { return _dump().c_str(); }
 
 public:
@@ -152,12 +152,13 @@ public:
     bool has_z() const { return _has_z; }
     bool calculable() const { return !has_x() && !has_z(); }
 
-    std::string str() const;
+    const std::string bits_str() const;
+    const std::string to_int_str() const;
+    const std::string str() const { return to_int_str(); }
 
     // converter
     int to_int() const;
     unsigned int to_uint() const;
-    const std::string to_int_str() const;
 
     operator int() const          { return to_int(); }
     operator unsigned int() const { return to_uint(); }

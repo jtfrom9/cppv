@@ -42,7 +42,7 @@ const scalarval& VectorValue::get_scalar( int index ) const
     }
 }
 
-string VectorValue::_dump() const
+const string VectorValue::_dump() const
 {
     stringstream ss;
     for(unsigned int i=0; i<_vecvals->size(); i++) {
@@ -66,7 +66,7 @@ const scalarval& VectorValue::bit( unsigned int index ) const
 }
 
 // public 
-std::string VectorValue::str() const
+const std::string VectorValue::bits_str() const
 {
     std::stringstream ss;
     for(unsigned int i=0; i<_width; i++) {

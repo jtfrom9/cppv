@@ -66,7 +66,9 @@ public:
 
     const char* vpi_type_cstr() const
     {
-        return vpi_type_str().c_str();
+        static char msg[1024];
+        strcpy(msg,vpi_type_str().c_str());
+        return msg;
     }
 
     int vpi_type() const 
@@ -74,24 +76,14 @@ public:
         return (int)_vpi_get(vpiType);
     }
 
-    std::string name() const 
+    const std::string name() const 
     {
         return std::string(vpi_get_str(vpiName, _handle));
-    }
-
-    const char* namec() const
-    {
-        return name().c_str();
     }
 
     std::string fullname() const 
     {
         return std::string(vpi_get_str(vpiFullName, _handle));
-    }
-
-    const char* fullnamec() const
-    {
-        return fullname().c_str();
     }
 
     int width() const {

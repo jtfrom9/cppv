@@ -36,7 +36,7 @@ public:
         _manager = manager;
     }
     virtual void execute() = 0;
-    virtual std::string str() = 0;
+    virtual const std::string str() const = 0;
 
     const char* dump()
     {
@@ -70,7 +70,7 @@ public:
         _manager->raise( _proc );
     }
 
-    std::string str() { 
+    const std::string str() const { 
         return std::string("DelayRequest: proc=") + _proc->name();
     }
 };
@@ -98,7 +98,7 @@ public:
         _manager->raise( _proc );
     }
     
-    std::string str() { 
+    const std::string str() const { 
         return std::string("WaitValueChangeRequest: proc=") + _proc->name();
     }
 };
@@ -121,7 +121,7 @@ public:
         _manager->regist( _newproc );
     }
 
-    std::string str() { 
+    const std::string str() const { 
         return std::string("CreateProcessRequest: proc=") + _newproc->name(); 
     }
 };
@@ -149,7 +149,7 @@ public:
         _manager->raise( _proc );
     }
 
-    std::string str() { 
+    const std::string str() const { 
         return std::string("WaitProcessRequest: proc=") + _waitproc->name(); 
     }
 };
