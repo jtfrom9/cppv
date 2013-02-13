@@ -11,6 +11,8 @@
 #include "boost/noncopyable.hpp"
 
 #include "Simulator.hpp"
+#include "Value.hpp"
+
 #include "vpi_user.h"
 
 class VPIObject: private boost::noncopyable
@@ -22,8 +24,8 @@ private:
     callbacks_container _callbacks;
 
 private:
-    s_vpi_value _val;
-    s_vpi_time  _time;
+    mutable s_vpi_value _val;
+    mutable s_vpi_time  _time;
 
 protected:
     vpiHandle _handle;
@@ -119,6 +121,13 @@ public:
         return (bool)_val.value.str;
     }
 
+    vecval readvec() const {
+        std::memset(&_val,0,sizeof(_val));
+        _val.format  = vpiVectorVal;
+        vpi_get_value(_handle, &_val);
+        return VectorValue::create(_val.value.vector, width());
+    }
+    
     virtual std::string to_str() const = 0;
 
 private:

@@ -15,7 +15,7 @@ all: dep compile
 
 include Makefile.$(SIM)
 
-OBJS = vpitest.o startup.o objects.o Simulator.o Process.o ProcessManager.o
+OBJS = vpitest.o startup.o objects.o Simulator.o Process.o ProcessManager.o Value.o
 
 .cpp.o: 
 	$(CC) $(CFLAGS) -c $<

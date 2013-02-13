@@ -9,6 +9,7 @@ using boost::format;
 #include "Process.hpp"
 #include "ProcessManager.hpp"
 
+#include "Value.hpp"
 
 long long get_time() {
     s_vpi_time time;
@@ -46,7 +47,7 @@ protected:
     void main() {
         const Simulator& sim = ProcessManager::get().getSimulator();
         Wire* clko = sim.getModule(0).get_wire("clko");
-        // for(int i=0; i<10; i++) {
+        //for(int i=0; i<10; i++) {
         while(true) {
             wait(clko);
             cout << format("time: %4d, clko=%s") % get_time() % clko->readb() << endl;
@@ -57,6 +58,11 @@ protected:
 int vmain(int argc, char *argv[])
 {
     cout << "vmain start" << endl;
+
+    vecval v = make_vecval2("0011zX10");
+    cout << format("vecval = %s") % v  << endl;
+    cout << "vecval = " << v << endl;
+
     Process* p = create(new clkgen("clkgen"));
     Process* p2 = create(new monitor());
     wait(p);
