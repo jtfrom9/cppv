@@ -92,7 +92,7 @@ private:
         //cout << __func__ << ": " << proc->name() << " yield." << endl;
 
         if((req = proc->receive()) !=0 ) {
-            //cout << __func__ << ": " << proc->name() << " recv=" << req->to_str() << endl;
+            //cout << __func__ << ": " << proc->name() << " recv=" << req->str() << endl;
 
             req->setManager( this );
             // do request from Process by yield_send() methods

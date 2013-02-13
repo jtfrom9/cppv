@@ -14,7 +14,7 @@ using std::runtime_error;
 #include "Simulator.hpp"
 #include "objects.hpp"
 
-string Reg::to_str() const {
+string Reg::str() const {
     stringstream ss;
     ss << name() << "["
        << ":width=" << width()
@@ -23,7 +23,7 @@ string Reg::to_str() const {
 }
 
 /*
-string Port::to_str() const {
+string Port::str() const {
     stringstream ss;
     ss << name() << "["
        << "dir=" << direction()
@@ -64,15 +64,15 @@ Module::Module(vpiHandle h): VPIObject(h)
     }
 }
 
-string Module::to_str() const {
+string Module::str() const {
     stringstream ss;
     ss << "(";
     /*
     for(vector<Port*>::const_iterator p = _ports.begin(); p!=_ports.end(); ++p) {
-        ss << (*p)->to_str() << ", ";
+        ss << (*p)->str() << ", ";
         }*/
     for(vector<Reg*>::const_iterator r = _regs.begin(); r!=_regs.end(); ++r) {
-        ss << (*r)->to_str() << ", ";
+        ss << (*r)->str() << ", ";
     }
     ss << ")";
     return ss.str();

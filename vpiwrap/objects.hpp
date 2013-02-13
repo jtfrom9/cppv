@@ -128,7 +128,7 @@ public:
         return VectorValue::create(_val.value.vector, width());
     }
     
-    virtual std::string to_str() const = 0;
+    virtual std::string str() const = 0;
 
 private:
     static void valueChanged( s_cb_data* );
@@ -165,7 +165,7 @@ public:
     }
 
     // overrides
-    std::string to_str() const;
+    std::string str() const;
 };
 
 
@@ -254,7 +254,7 @@ public:
             ", vec: " + vector();
     }
 
-    std::string to_str() const
+    std::string str() const
     {
         return "";
     }
@@ -317,7 +317,7 @@ public:
     }
 
     // overrides
-    std::string to_str() const;
+    std::string str() const;
 };
 */
 
@@ -341,7 +341,7 @@ public:
     }
 
     // overrides
-    virtual std::string to_str() const;
+    virtual std::string str() const;
 
     //Port* get_port(std::string name) const;
     Reg* get_reg(std::string name) const;

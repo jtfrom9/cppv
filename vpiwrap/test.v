@@ -4,6 +4,16 @@ module skel();
    wire [15:0] C;
    reg clk;
    wire clko;
+
+   initial begin
+      A = 0;
+      B = 0;
+      # 10;
+      A = 1;
+      # 10;
+      B = 1;
+   end
+   
    
    //wire [15:0] C;
    //test t( .A(16'h0), .B(16'h0), .C(), .clk(clk));

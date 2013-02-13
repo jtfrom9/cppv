@@ -50,10 +50,27 @@ protected:
         //for(int i=0; i<10; i++) {
         while(true) {
             wait(clko);
-            cout << format("time: %4d, clko=%s") % get_time() % clko->readb() << endl;
+            cout << format("time: %4d, clko=%s") % get_time() % clko->readvec().to_int_str() << endl;
         }
     }
 };
+
+class monitor2: public Process
+{
+public:
+    monitor2(): Process("monitor2") {}
+protected:
+    void main() {
+        const Simulator& sim = ProcessManager::get().getSimulator();
+        Wire* C = sim.getModule(0).get_wire("C");
+        while(true) {
+            wait(C);
+            cout << format("time: %4d, C=%s") % get_time() % C->readvec().to_int_str() 
+                 << endl;
+        }
+    }
+};
+
 
 int vmain(int argc, char *argv[])
 {
@@ -65,8 +82,10 @@ int vmain(int argc, char *argv[])
 
     Process* p = create(new clkgen("clkgen"));
     Process* p2 = create(new monitor());
+    Process* p3 = create(new monitor2());
     wait(p);
     wait(p2);
+    wait(p3);
     cout << "vmain end" << endl;
     return 0;
 }

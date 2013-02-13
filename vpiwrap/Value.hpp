@@ -4,6 +4,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <iostream>
+#include <sstream>
 
 #include "boost/noncopyable.hpp"
 #include "boost/shared_ptr.hpp"
@@ -17,11 +18,16 @@ public:
     virtual ~ValueBase() {}
 };
 
-class ScalarVal: public ValueBase, public boost::noncopyable
+class ScalarValue: public ValueBase, public boost::noncopyable
 {
     char _bit;
 public:
-    ScalarVal(char v): _bit(v) {}
+    ScalarValue(char v): _bit(v) {}
+
+    bool operator==( const ScalarValue& rsh ) const
+    {
+        return _bit==rsh._bit;
+    }
 
     operator char() const 
     { 
@@ -33,17 +39,20 @@ public:
     {
         return static_cast<int>(*this);
     }
-};
-typedef ScalarVal scalarval;
 
-const ScalarVal _1('1');
-const ScalarVal _0('0');
+    std::string str() const { return std::string(&_bit); }
+};
+
+typedef ScalarValue scalarval;
+
+const ScalarValue _1('1');
+const ScalarValue _0('0');
 
 #define b0 (_0)
 #define b1 (_1)
 
-const ScalarVal _x('x');
-const ScalarVal _z('z');
+const ScalarValue _x('x');
+const ScalarValue _z('z');
 
 #define _X (_x)
 #define _Z (_z)
@@ -70,25 +79,38 @@ public:
 
 private:
     boost::shared_ptr<vecvals_container> _vecvals;
-    int _width;
+    unsigned int _width;
+    bool _has_x;
+    bool _has_z;
 
-    
-    bool width_check( int num_vecvals, int width )
+    bool _width_check( unsigned int num_vecvals, unsigned int width )
     {
         return num_vecvals >= ((width - 1) / 32) + 1;
     }
 
+    void _init_has_xz() {
+        _has_x = false;
+        _has_z = false;
+        for(unsigned int i=0; i<_width; i++) {
+            const ScalarValue& sv = bit(i);
+            if(sv==_X) _has_x = true;
+            if(sv==_Z) _has_z = true;
+        }
+    }
+
 public:
     // ctor
-    VectorValue( vecvals_container_p vecvals, int width ):
+    VectorValue( vecvals_container_p vecvals, unsigned int width ):
         _vecvals( vecvals ),
         _width( width )
     {
-        if(!width_check(vecvals->size(), width))
+        if(!_width_check(vecvals->size(), width))
             throw std::invalid_argument((format("%s: vecvals entry = %d is not enough for width = %d")
                                          % __func__ % vecvals->size() % width).str());
+        _init_has_xz();
     }
 
+    // static  create from t_vpi_vecval array
     static VectorValue create( t_vpi_vecval* vpi_vecval_array, int width )
     {
         vecvals_container_p vecvals_p(new vecvals_container());
@@ -99,61 +121,46 @@ public:
     }
 
     // copy ctor
-    VectorValue( const VectorValue& rhs )
-    {
-        _vecvals = rhs._vecvals;
-        _width   = rhs._width;
-    }
+    // VectorValue( const VectorValue& rhs )
+    // {
+    //     _vecvals = rhs._vecvals;
+    //     _width   = rhs._width;
+    // }
 
     // assign copy
-    VectorValue& operator=( const VectorValue& rhs )
-    {
-        _vecvals = rhs._vecvals;
-        _width   = rhs._width;
-        return *this;
-    }
+    // VectorValue& operator=( const VectorValue& rhs )
+    // {
+    //     _vecvals = rhs._vecvals;
+    //     _width   = rhs._width;
+    //     return *this;
+    // }
 
 private:
-    const scalarval& get_scalar( int index ) const
-    {
-        int div = index / 32;
-        int mod = index % 32;
-        int32_t a = (*_vecvals)[div].aval & (1 << mod);
-        int32_t b = (*_vecvals)[div].bval & (1 << mod);
-        if(!b) {
-            return (a) ? _1 : _0;
-        } else {
-            return (a) ? _X : _Z;
-        }
-    }
+    const scalarval& get_scalar( int index ) const;
+    unsigned int conv() const;
+    std::string _dump() const;
+    const char* dump() const { return _dump().c_str(); }
 
 public:
-    const scalarval& operator[]( int index ) const 
-    {
-        if (index < 0 || index >= _width)
-            throw std::invalid_argument((format("index=%d is larger than width=%d") % index % _width).str());
-        return get_scalar( index );
-    }
-    
+    // bit operations
+    const scalarval& bit( unsigned int index ) const;
+    const scalarval& operator[]( int index ) const { return bit( index ); }
+
+    // properties
     int width() const { return _width; }
-
-    bool has_x() const {
-        for(int i=0; i<_width; i++) {
-            if((*this)[i]==_X)
-                return true;
-        }
-        return false;
-    }
-
-    bool has_z() const {
-        for(int i=0; i<_width; i++) {
-            if((*this)[i]==_Z)
-                return true;
-        }
-        return false;
-    }
-
+    bool has_x() const { return _has_x; }
+    bool has_z() const { return _has_z; }
     bool calculable() const { return !has_x() && !has_z(); }
+
+    std::string str() const;
+
+    // converter
+    int to_int() const;
+    unsigned int to_uint() const;
+    const std::string to_int_str() const;
+
+    operator int() const          { return to_int(); }
+    operator unsigned int() const { return to_uint(); }
 };
 
 typedef VectorValue vecval;
