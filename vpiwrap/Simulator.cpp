@@ -121,6 +121,15 @@ public:
 
         setCallback( cb, desc );
     }
+
+    long long sim_time() const
+    {
+        s_vpi_time time;
+        std::memset(&time,0,sizeof(time));
+        time.type = vpiSimTime;
+        vpi_get_time(NULL,&time);
+        return (long long)time.high << 32 | (long long)time.low;
+    }
 };
 
 

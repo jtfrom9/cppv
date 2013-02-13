@@ -78,6 +78,7 @@ Process* Process::create( Process* newproc ) {
     return newproc;
 }
 
+
 // global function
 void delay( int cycle )
 {
@@ -104,4 +105,35 @@ Process* create( Process* proc )
 {
     Process *currentProcess = ProcessManager::get().getCurrent();
     return currentProcess->create( proc );
+}
+
+
+class UserProcess: public Process
+{
+    boost::function<void()> _func;
+public:
+    UserProcess( const char* name, boost::function<void()> func ): 
+        Process(name),
+        _func(func)
+    {}
+
+    void main() {
+        _func();
+    }
+};
+
+Process* create( const char* name, boost::function<void()> func )
+{
+    Process *currentProcess = ProcessManager::get().getCurrent();
+    return currentProcess->create(new UserProcess( name, func ));
+}
+
+long long sim_time() 
+{
+    return ProcessManager::get().getSimulator().sim_time();
+}
+
+Module& top()
+{
+    return ProcessManager::get().getSimulator().getModule(0);
 }

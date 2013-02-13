@@ -43,6 +43,8 @@ public:
 
     virtual void setAfterDelayCallback( SimulatorCallback* cb, int delay ) const = 0;
 
+    virtual long long sim_time() const = 0;
+
     static void scanRegs( std::vector<Reg*>& regs, const VPIObject& vpiObj );
     //static void scanPorts( std::vector<Port*>& ports, const VPIObject& vpiObj );
     static void scanWires( std::vector<Wire*>& wires, const VPIObject& vpiObj );

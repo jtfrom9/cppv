@@ -2,6 +2,7 @@
 #define PROCESS_HPP
 
 #include "boost/noncopyable.hpp"
+#include "boost/function.hpp"
 
 #include "objects.hpp"
 
@@ -42,6 +43,7 @@ public:
     friend void wait( Process* proc );
     friend void wait( VPIObject* obj );
     friend Process* create( Process* proc );
+    friend Process* create( const char* name, boost::function<void()> func );
 };
 
 
@@ -50,5 +52,8 @@ void delay( int cycle );
 void wait( Process* proc );
 void wait( VPIObject* proc );
 Process* create( Process* proc );
+Process* create( const char* name, boost::function<void()> func );
+long long sim_time();
+Module& top();
 
 #endif
