@@ -133,6 +133,11 @@ long long sim_time()
     return ProcessManager::get().getSimulator().sim_time();
 }
 
+void finish()
+{
+    return ProcessManager::get().getSimulator().finish();
+}
+
 Module& top()
 {
     return ProcessManager::get().getSimulator().getModule(0);

@@ -105,14 +105,6 @@ public:
 
     void write( bool b ) { write_nodely( b ); }
 
-    bool readb() {
-        std::memset(&_val,0,sizeof(_val));
-        _val.format    = vpiBinStrVal;
-        vpi_get_value(_handle, &_val);
-        std::cout << "str=" << _val.value.str << std::endl;
-        return (bool)_val.value.str;
-    }
-
     vecval readvec() const {
         std::memset(&_val,0,sizeof(_val));
         _val.format  = vpiVectorVal;

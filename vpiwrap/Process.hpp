@@ -54,6 +54,7 @@ void wait( VPIObject* proc );
 Process* create( Process* proc );
 Process* create( const char* name, boost::function<void()> func );
 long long sim_time();
+void finish();
 Module& top();
 
 #endif

@@ -21,6 +21,7 @@ void clkgen() {
         clk->write(1);
         delay(10);
     }
+    finish();
 };
 
 void monitor() {

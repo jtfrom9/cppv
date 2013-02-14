@@ -44,6 +44,7 @@ public:
     virtual void setAfterDelayCallback( SimulatorCallback* cb, int delay ) const = 0;
 
     virtual long long sim_time() const = 0;
+    virtual void finish( int arg = 0 ) const = 0;
 
     static void scanRegs( std::vector<Reg*>& regs, const VPIObject& vpiObj );
     //static void scanPorts( std::vector<Port*>& ports, const VPIObject& vpiObj );
@@ -54,5 +55,14 @@ public:
 };
 
 void dumpTopology(std::ostream os, const Simulator& sim);
+
+/*
+  vpi_control => finish, stop
+
+  vpi_flush / vpi_printf
+     log用のstreamオブジェクトを実装
+     実体は、Simulator::get_vlog_out 
+     
+ */
 
 #endif

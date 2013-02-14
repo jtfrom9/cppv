@@ -130,7 +130,16 @@ public:
         vpi_get_time(NULL,&time);
         return (long long)time.high << 32 | (long long)time.low;
     }
-};
+
+    void finish( int arg ) const 
+    {
+        vpi_control(vpiFinish, arg);
+        /*
+        if(vpi_control(vpiFinish, arg)==0) {
+            throw SimulatorError(string(__func__) + (format(": fail to vpi_control. arg=%d") % arg).str());
+            }*/
+    }
+}; // SimulatorImpl
 
 
 // static
