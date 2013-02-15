@@ -138,7 +138,7 @@ public:
     // override (Request)
     void execute()
     {
-        if ( _waitproc->end() ) {
+        if ( _waitproc->is_end() ) {
             // already end.
             _manager->run( _proc );
         } else {

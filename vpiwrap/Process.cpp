@@ -13,6 +13,7 @@ using boost::shared_ptr;
 #include "Request.hpp"
 #include "generator.hpp"
 
+
 class Context: public generic_generator<Request*>
 {
 private:
@@ -23,17 +24,23 @@ public:
     {}
 
 protected:
-    void body() {
+    void body() throw(std::exception) 
+    {
         _proc->main();
     }
     friend class Process;
-};
+}; // Context
 
 
-Process::Process( const char* name ): _name(name)
-{
-    _context = new Context( this );
-}
+// Process
+
+Process::Process( const char* name ): 
+    _name(name),
+    _context( new Context( this )),
+    _status( INIT ),
+    _sleep_reason( NONE ),
+    _end_reason( NORMAL )
+{}
 
 Process::~Process()
 {
@@ -42,22 +49,26 @@ Process::~Process()
 
 void Process::resume()
 {
+    bool terminated, abort;
+    _status = RUN;
     try {
         _context->next();
     } 
     catch(const stop_iteration& e) {
-        /* do nothing */
+        terminated = e.terminated;
+        abort      = e.abort;
     }
-    if (end()) {
+    if (_context->end()) {
+        _status = END;
+        if(abort)           _end_reason = ABORT;
+        else if(terminated) _end_reason = TERMINATE;
+        else                _end_reason = NORMAL;
         BOOST_FOREACH( ProcessCallback* cb, _callbacks ) {
             cb->onEnd();
         }
+    } else {
+        _status = SLEEP;
     }
-}
-
-bool Process::end()
-{
-    return _context->end();
 }
 
 Request* Process::receive()
@@ -82,27 +93,33 @@ void Process::addEndCallback( ProcessCallback* cb )
 void Process::delay( int cycle ) {
     // RAII, DelayRequest must be deleted when returning this function
     shared_ptr<Request> p( new DelayRequest(this, cycle) );
+    _sleep_reason = DELAY;
     _context->yield_send( p.get() );
 }
 
 // protected
 void Process::wait( Process* proc ) {
     shared_ptr<Request> p( new WaitProcessRequest(this, proc) );
+    _sleep_reason = WAIT_FOR_PROCESS;
     _context->yield_send( p.get() );
 }
 
 // protected
 void Process::wait( VPIObject* obj ) {
     shared_ptr<Request> p( new WaitValueChangeRequest(this, obj) );
+    _sleep_reason = WAIT_FOR_VALUECHANGE;
     _context->yield_send( p.get() );
 }
 
 // protected
 Process* Process::create( Process* newproc ) {
     shared_ptr<Request> p( new CreateProcessRequest(this, newproc) );
+    _sleep_reason = CREATE_PROCESS;
     _context->yield_send( p.get() );
     return newproc;
 }
+
+
 
 // global function
 void delay( int cycle )

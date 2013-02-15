@@ -116,7 +116,7 @@ public:
 
                 switch_to( proc );
         
-                if( proc->end() ) {
+                if( proc->is_end() ) {
                     temp_end_list.push_back( proc ); // to end list
                 }
             }

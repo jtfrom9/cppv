@@ -21,16 +21,35 @@ public:
 
 class Process: public boost::noncopyable
 {
+public:
+    typedef enum { INIT, RUN, SLEEP, END } status_t;
+    typedef enum {
+        NONE,
+        DELAY,
+        WAIT_FOR_PROCESS,
+        WAIT_FOR_VALUECHANGE,
+        CREATE_PROCESS,
+    } sleep_reason_t;
+
+    typedef enum {
+        NORMAL,
+        TERMINATE,
+        ABORT
+    } end_reason_t;
+
 private:
-    const char* _name;
-    Context* _context;
+    const char*    _name;
+    Context*       _context;
+    status_t       _status;
+    sleep_reason_t _sleep_reason;
+    end_reason_t   _end_reason;
 
     typedef std::list<ProcessCallback*> callback_container;
     callback_container _callbacks;
 
 public:
-    Process( const char* name );
-    virtual ~Process();
+    Process( const char* name ); // ctor
+    virtual ~Process();          // dtor
 
     const char* name() const { return _name; }
 
@@ -46,13 +65,21 @@ protected:
 public:
     // for ProcessManager
     void resume();
-    bool end();
     Request* receive();
     void terminate();
 
+    status_t status() const { return _status; }
+    bool is_end() const     { return _status==END; }
+    bool is_run() const     { return _status==RUN; }
+    bool is_sleep() const   { return _status==SLEEP; }
+
+    sleep_reason_t sleep_reason() const { return _sleep_reason; }
+    end_reason_t end_reason() const     { return _end_reason; }
+
     void addEndCallback( ProcessCallback* cb );
 
-    // for global functions
+    
+    // friend functions
     friend void delay( int cycle );
     friend void wait( Process* proc );
     friend void wait( VPIObject* obj );
@@ -61,7 +88,8 @@ public:
 };
 
 
-// global functions
+
+// global APIs
 void delay( int cycle );
 void wait( Process* proc );
 void wait( VPIObject* proc );

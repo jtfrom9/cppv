@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <stdexcept>
 #include <iostream>
 
@@ -10,19 +11,19 @@
 struct stop_iteration: std::exception 
 {
 public:
-    bool ended;
     bool terminated;
+    bool abort;
 
-    stop_iteration(bool _ended, bool _terminated):
-        ended(_ended),
-        terminated(_terminated)
+    stop_iteration(bool _terminated, bool _abort):
+        terminated(_terminated),
+        abort(_abort)
     {}
 
     const char* what() const throw() {
         static char msg[256];
         std::strncpy(msg, 
-                     (boost::format("stop_iteration: ended=%d, terminated=%d") 
-                      % ended % terminated).str().c_str(),
+                     (boost::format("stop_iteration: terminated=%d, abort=%d") 
+                      % terminated %abort ).str().c_str(),
                      sizeof(msg));
         return msg;
     }
@@ -36,10 +37,16 @@ private:
     int   _stack_size;
     
     bool  _end;
-    bool  _terminate;
+    bool  _terminated;
+    bool  _abort;
 
     static void callChild(generator* gen) {
-        gen->body();
+        try {
+            gen->body();
+        }
+        catch(const std::exception& e) {
+            gen->_abort = true;
+        }
         gen->_end = true;
     }
 
@@ -48,7 +55,8 @@ private:
 protected:
     generator( int stack_size=16*1024 ): 
         _end(false),
-        _terminate(false)
+        _terminated(false),
+        _abort(false)
     {
         if(getcontext(&_context_child)==-1)
             throw std::runtime_error("generator: fail @ getcontext");
@@ -64,12 +72,15 @@ protected:
         free(_stack);
     }
 
-    virtual void body() = 0;
+    virtual void body() throw( std::exception ) = 0;
 
 public:
-    void next() {
-        if(_end || _terminate)
-            throw stop_iteration(_end,_terminate);
+    void next()
+    {
+        if(_end || _terminated) {
+            _end = true;
+            throw stop_iteration(_terminated,_abort);
+        }
         if(swapcontext(&_context_parent, &_context_child) == -1)
             throw std::runtime_error("next: fail @ swapcontext");
     }
@@ -77,7 +88,7 @@ public:
         return _end;
     }
     void terminate() {
-        _terminate = true;
+        _terminated = true;
     }
     
 protected:
