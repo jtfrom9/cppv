@@ -30,10 +30,6 @@ private:
     process_container _active_list;
     process_container _end_list;
 
-    typedef map<Process*, hook_handler_t> hook_container;
-    typedef hook_container::value_type hook_entry;
-    hook_container _end_hooks;
-
     // dtor
     ~ProcessManagerImpl()
     {}
@@ -83,11 +79,7 @@ private:
     
         _current = proc;
         //cout << dump() << endl;
-        try {
-            proc->next();// context switch
-        } catch( const stop_iteration& e ) {
-            cout << "Process End" << endl;
-        }
+        proc->resume();// context switch
         _current = 0;
     
         //cout << __func__ << ": " << proc->name() << " yield." << endl;
@@ -133,38 +125,16 @@ public:
                 Process* proc = temp_end_list.front();
                 temp_end_list.pop_front();
                 _end_list.push_back( proc );
-                call_hook( proc );
             }
         }
 
         //cout << __func__ << ": " << "exit." << endl;
     }
 
-private:
-    void call_hook( Process* proc ) 
-    {
-        assert(proc!=0);
-
-        hook_container::iterator i = _end_hooks.find( proc );
-
-        // call hook
-        if(i!=_end_hooks.end()) {
-            _end_hooks[ proc ](); 
-        }
-    }
-
 public:
     void raise( Process* proc ) {
         run( proc );
         schedule();
-    }
-
-    void addHook( Process* waitproc, hook_handler_t cb )
-    {
-        hook_container::iterator i = _end_hooks.find( waitproc );
-        if(i==_end_hooks.end()) { 
-            _end_hooks.insert(hook_entry(waitproc,cb));
-        }
     }
 
     const Simulator& getSimulator() 

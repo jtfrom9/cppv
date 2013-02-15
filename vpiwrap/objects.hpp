@@ -20,8 +20,8 @@ class VPIObject: private boost::noncopyable
 private:
     vpiHandle _cbhandle;
 
-    typedef std::list<SimulatorCallback*> callbacks_container;
-    callbacks_container _callbacks;
+    typedef std::list<SimulatorCallback*> callback_container;
+    callback_container _callbacks;
 
 private:
     mutable s_vpi_value _val;

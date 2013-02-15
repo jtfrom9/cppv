@@ -2,7 +2,6 @@
 #define PROCESSMANAGER_HPP
 
 #include "boost/noncopyable.hpp"
-#include "boost/function.hpp"
 
 #include "Process.hpp"
 
@@ -24,10 +23,6 @@ public:
     // user functions
     virtual Process* getCurrent() const  = 0;
     virtual void regist( Process* proc ) = 0;
-
-    typedef boost::function<void ()> hook_handler_t;
-
-    virtual void addHook( Process* waitproc, hook_handler_t cb ) = 0;
 
     virtual const Simulator& getSimulator() = 0;
 

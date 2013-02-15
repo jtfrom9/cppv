@@ -146,7 +146,7 @@ void VPIObject::valueChanged( s_cb_data* pcbdata )
         }
     }
 
-    callbacks_container temp;
+    callback_container temp;
     // move to temp
     while(!object->_callbacks.empty()) {
         SimulatorCallback* cb = object->_callbacks.front();
@@ -195,7 +195,7 @@ void VPIObject::setValueChangedCallback( SimulatorCallback* cb )
 /*
 void VPIObject::unsetCallback( SimulatorCallback *cb )
 {
-    callbacks_container::iterator p = std::find( _callbacks.begin(), _callbacks.end(), cb );
+    callback_container::iterator p = std::find( _callbacks.begin(), _callbacks.end(), cb );
     if (p!=_callbacks.end()) {
         _callbacks.erase( p );
         if (_callbacks.empty()) {

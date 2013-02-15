@@ -1,7 +1,11 @@
-#include <list>
 #include <string>
+#include <stdexcept>
+
+using std::string;
+using std::invalid_argument;
 
 #include "boost/shared_ptr.hpp"
+#include "boost/foreach.hpp"
 using boost::shared_ptr;
 
 #include "util.hpp"
@@ -36,9 +40,19 @@ Process::~Process()
     delete _context;
 }
 
-void Process::next()
+void Process::resume()
 {
-    _context->next();
+    try {
+        _context->next();
+    } 
+    catch(const stop_iteration& e) {
+        /* do nothing */
+    }
+    if (end()) {
+        BOOST_FOREACH( ProcessCallback* cb, _callbacks ) {
+            cb->onEnd();
+        }
+    }
 }
 
 bool Process::end()
@@ -50,6 +64,18 @@ Request* Process::receive()
 {
     Request* pcom;
     return _context->receive( &pcom ) ? pcom : 0;
+}
+
+void Process::terminate()
+{
+    _context->terminate();
+}
+
+void Process::addEndCallback( ProcessCallback* cb )
+{
+    if (_find(_callbacks, cb)!=0) 
+        throw invalid_argument(string(__func__) + (format(": already added cb=%p") % cb).str());
+    _callbacks.push_back( cb );
 }
 
 // protected
@@ -77,7 +103,6 @@ Process* Process::create( Process* newproc ) {
     _context->yield_send( p.get() );
     return newproc;
 }
-
 
 // global function
 void delay( int cycle )

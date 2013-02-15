@@ -1,6 +1,8 @@
 #ifndef PROCESS_HPP
 #define PROCESS_HPP
 
+#include <list>
+
 #include "boost/noncopyable.hpp"
 #include "boost/function.hpp"
 
@@ -11,11 +13,20 @@ class Request;
 
 class ISignal {};
 
+class ProcessCallback
+{
+public:
+    virtual void onEnd() = 0;
+};
+
 class Process: public boost::noncopyable
 {
 private:
     const char* _name;
     Context* _context;
+
+    typedef std::list<ProcessCallback*> callback_container;
+    callback_container _callbacks;
 
 public:
     Process( const char* name );
@@ -34,9 +45,12 @@ protected:
 
 public:
     // for ProcessManager
-    void next();
+    void resume();
     bool end();
     Request* receive();
+    void terminate();
+
+    void addEndCallback( ProcessCallback* cb );
 
     // for global functions
     friend void delay( int cycle );

@@ -28,12 +28,6 @@ public:
     }
 };
 
-std::ostream& operator<<( std::ostream& os, const stop_iteration& e )
-{
-    os << e.what() << ": end=" << e.ended << ", terminated=" << e.terminated;
-    return os;
-}
-
 class generator {
 private:
     ucontext_t _context_child;

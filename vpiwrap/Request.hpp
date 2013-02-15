@@ -5,8 +5,6 @@
 #include <string>
 
 #include "boost/noncopyable.hpp"
-#include "boost/bind.hpp"
-#include "boost/function.hpp"
 
 #include "util.hpp"
 #include "objects.hpp"
@@ -127,7 +125,7 @@ public:
 };
 
 
-class WaitProcessRequest: public Request
+class WaitProcessRequest: public Request, public ProcessCallback
 {
     Process* _waitproc;
 
@@ -144,12 +142,11 @@ public:
             // already end.
             _manager->run( _proc );
         } else {
-            _manager->addHook( _waitproc, 
-                               boost::bind( &WaitProcessRequest::waithook, this ) );
+            _waitproc->addEndCallback( this );
         }
     }
 
-    void waithook()
+    void onEnd()
     {
         _manager->raise( _proc );
     }
