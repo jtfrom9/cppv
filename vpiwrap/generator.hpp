@@ -1,9 +1,38 @@
 #include <cstdlib>
+#include <cstring>
 #include <stdexcept>
+#include <iostream>
 
 #include <ucontext.h>
 
-struct stop_iteration: std::exception {};
+#include "boost/format.hpp"
+
+struct stop_iteration: std::exception 
+{
+public:
+    bool ended;
+    bool terminated;
+
+    stop_iteration(bool _ended, bool _terminated):
+        ended(_ended),
+        terminated(_terminated)
+    {}
+
+    const char* what() const throw() {
+        static char msg[256];
+        std::strncpy(msg, 
+                     (boost::format("stop_iteration: ended=%d, terminated=%d") 
+                      % ended % terminated).str().c_str(),
+                     sizeof(msg));
+        return msg;
+    }
+};
+
+std::ostream& operator<<( std::ostream& os, const stop_iteration& e )
+{
+    os << e.what() << ": end=" << e.ended << ", terminated=" << e.terminated;
+    return os;
+}
 
 class generator {
 private:
@@ -13,6 +42,7 @@ private:
     int   _stack_size;
     
     bool  _end;
+    bool  _terminate;
 
     static void callChild(generator* gen) {
         gen->body();
@@ -23,7 +53,8 @@ private:
 
 protected:
     generator( int stack_size=16*1024 ): 
-        _end(false)
+        _end(false),
+        _terminate(false)
     {
         if(getcontext(&_context_child)==-1)
             throw std::runtime_error("generator: fail @ getcontext");
@@ -43,13 +74,16 @@ protected:
 
 public:
     void next() {
-        if(_end)
-            throw stop_iteration();
+        if(_end || _terminate)
+            throw stop_iteration(_end,_terminate);
         if(swapcontext(&_context_parent, &_context_child) == -1)
             throw std::runtime_error("next: fail @ swapcontext");
     }
     bool end() {
         return _end;
+    }
+    void terminate() {
+        _terminate = true;
     }
     
 protected:
