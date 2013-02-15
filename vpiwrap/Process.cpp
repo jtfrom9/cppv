@@ -132,6 +132,13 @@ void Process::terminate( Process* proc, bool block ) {
     _context->yield_send( p.get() );
 }
 
+// protected
+void Process::finish() {
+    shared_ptr<Request> p( new FinishSimulationRequest(this) );
+    _sleep_reason = FINISH_SIMULATION;
+    _context->yield_send( p.get() );
+}
+
 // global function
 void delay( int cycle )
 {
@@ -167,6 +174,13 @@ void terminate( Process* proc, bool block )
     return currentProcess->terminate( proc, block );
 }
 
+// global function
+void finish()
+{
+    Process *currentProcess = ProcessManager::get().getCurrent();
+    return currentProcess->finish();
+}
+
 class UserProcess: public Process
 {
     boost::function<void()> _func;
@@ -190,11 +204,6 @@ Process* create( const char* name, boost::function<void()> func )
 long long sim_time() 
 {
     return ProcessManager::get().getSimulator().sim_time();
-}
-
-void finish()
-{
-    return ProcessManager::get().getSimulator().finish();
 }
 
 Module& top()

@@ -29,7 +29,8 @@ public:
         WAIT_FOR_PROCESS,
         WAIT_FOR_VALUECHANGE,
         CREATE_PROCESS,
-        TERMINATE_PROCESS
+        TERMINATE_PROCESS,
+        FINISH_SIMULATION
     } sleep_reason_t;
 
     typedef enum {
@@ -63,6 +64,7 @@ protected:
     void wait( VPIObject* obj );
     Process* create(Process* proc);
     void terminate( Process* proc, bool block = true );
+    void finish();
 
 public:
     // for ProcessManager
@@ -88,6 +90,7 @@ public:
     friend Process* create( Process* proc );
     friend Process* create( const char* name, boost::function<void()> func );
     friend void terminate( Process* proc, bool block );
+    friend void finish();
 };
 
 
@@ -99,8 +102,8 @@ void wait( VPIObject* proc );
 Process* create( Process* proc );
 Process* create( const char* name, boost::function<void()> func );
 void terminate( Process* proc, bool block=true );
-long long sim_time();
 void finish();
+long long sim_time();
 Module& top();
 
 #endif

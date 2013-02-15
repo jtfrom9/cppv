@@ -1,14 +1,12 @@
 #include <string>
 #include <sstream>
 #include <list>
-#include <map>
 #include <stdexcept>
 #include <algorithm>
 
 using std::string;
 using std::stringstream;
 using std::list;
-using std::map;
 using std::invalid_argument;
 using std::runtime_error;
 
@@ -30,6 +28,8 @@ private:
     process_container _active_list;
     process_container _end_list;
 
+    bool _finished;
+
     // dtor
     ~ProcessManagerImpl()
     {}
@@ -38,7 +38,8 @@ public:
     // ctor
     ProcessManagerImpl( const Simulator* sim ): 
         _sim(sim), 
-        _current(0)
+        _current(0),
+        _finished(false)
     {}
 
     Process* getCurrent() const 
@@ -96,6 +97,8 @@ private:
 public:
     void schedule()
     {
+        if (_finished) return;
+
         //cout << __func__ << ": " << "entered." << endl;
 
         while(!_run_list.empty()) {
@@ -114,7 +117,17 @@ public:
                 Process* proc = _active_list.front();
                 _active_list.pop_front();
 
-                switch_to( proc );
+                try 
+                {
+                    switch_to( proc );
+                } 
+                catch(const FinishSimulation& e) 
+                {
+                    // finish() called.
+                    _sim->finish();
+                    _finished = true;
+                    return;
+                }
         
                 if( proc->is_end() ) {
                     temp_end_list.push_back( proc ); // to end list
@@ -132,7 +145,10 @@ public:
     }
 
 public:
-    void raise( Process* proc ) {
+    void raise( Process* proc ) 
+    {
+        if (_finished) return;
+
         run( proc );
         schedule();
     }

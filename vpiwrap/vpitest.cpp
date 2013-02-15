@@ -23,8 +23,7 @@ void clkgen() {
 
 void monitor() {
     Wire* clko = top().get_wire("clko");
-    for(int i=0; i<10; i++) {
-        //while(true) {
+    while(true) {
         wait(clko);
         cout << format("time: %4d, clko=%s") % sim_time() % clko->readvec() 
              << endl;
@@ -51,12 +50,15 @@ int vmain(int argc, char *argv[])
     Process* p = create("clkgen",clkgen);
     Process* p2 = create("monitor", monitor);
     Process* p3 = create("monitor2", monitor2);
-    wait(p2);
     wait(p3);
 
     delay(1000);
-    terminate(p);
+    //terminate(p);
+    //terminate(p2);
     
+    delay(1000);
+    finish();
+
     cout << "vmain end" << endl;
     return 0;
 }

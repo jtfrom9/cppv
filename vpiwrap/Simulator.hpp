@@ -18,6 +18,9 @@ public:
     {}
 };
 
+class FinishSimulation: public std::exception
+{};
+
 class SimulatorCallback 
 {
 public:

@@ -197,4 +197,21 @@ public:
     }
 };
 
+class FinishSimulationRequest: public Request
+{
+public:
+    FinishSimulationRequest( Process* self ): Request( self )
+    {}
+    
+    void execute()
+    {
+        cout << format("# %0d finish()") % sim_time() << endl;
+        throw FinishSimulation();
+    }
+
+    const std::string str() const { 
+        return std::string("FinishSimulationRequest");
+    }
+};
+
 #endif
