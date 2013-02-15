@@ -156,4 +156,45 @@ public:
     }
 };
 
+
+class TerminateProcessRequest: public Request, public ProcessCallback
+{
+    Process* _termproc;
+    bool _block;
+
+public:
+    TerminateProcessRequest( Process* self, Process* termproc, bool block ):
+        Request( self ),
+        _termproc( termproc )
+    {}
+    
+    void execute()
+    {
+        if (_termproc->is_end() ) {
+            // already end.
+            _manager->run( _proc );
+        } 
+        else {
+            _termproc->terminate();
+            if( !_block ) {
+                // immediately resume
+                _manager->run( _proc ); 
+            } else {
+                // late resume
+                _termproc->addEndCallback( this );
+            }
+        }
+    }
+
+    void onEnd()
+    {
+        // late resume
+        _manager->raise( _proc );
+    }
+
+    const std::string str() const { 
+        return std::string("TerminateProcessRequest: proc=") + _termproc->name(); 
+    }
+};
+
 #endif

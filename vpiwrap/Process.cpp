@@ -34,6 +34,7 @@ protected:
 
 // Process
 
+// ctor
 Process::Process( const char* name ): 
     _name(name),
     _context( new Context( this )),
@@ -42,11 +43,13 @@ Process::Process( const char* name ):
     _end_reason( NORMAL )
 {}
 
+// dtor
 Process::~Process()
 {
     delete _context;
 }
 
+// public for ProcessManager
 void Process::resume()
 {
     bool terminated, abort;
@@ -71,17 +74,20 @@ void Process::resume()
     }
 }
 
+// public for ProcessManager
 Request* Process::receive()
 {
     Request* pcom;
     return _context->receive( &pcom ) ? pcom : 0;
 }
 
+// public for Request(TerminateProcessRequest)
 void Process::terminate()
 {
     _context->terminate();
 }
 
+// public for Request(WaitProcessRequest)
 void Process::addEndCallback( ProcessCallback* cb )
 {
     if (_find(_callbacks, cb)!=0) 
@@ -119,7 +125,12 @@ Process* Process::create( Process* newproc ) {
     return newproc;
 }
 
-
+// protected
+void Process::terminate( Process* proc, bool block ) {
+    shared_ptr<Request> p( new TerminateProcessRequest(this, proc, block) );
+    _sleep_reason = TERMINATE_PROCESS;
+    _context->yield_send( p.get() );
+}
 
 // global function
 void delay( int cycle )
@@ -149,6 +160,12 @@ Process* create( Process* proc )
     return currentProcess->create( proc );
 }
 
+// global function
+void terminate( Process* proc, bool block )
+{
+    Process *currentProcess = ProcessManager::get().getCurrent();
+    return currentProcess->terminate( proc, block );
+}
 
 class UserProcess: public Process
 {

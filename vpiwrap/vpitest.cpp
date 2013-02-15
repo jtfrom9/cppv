@@ -13,15 +13,12 @@ using boost::format;
 
 void clkgen() {
     Reg* clk = top().get_reg("clk");
-
-    for(int i=0; i<10; i++) {
-        delay(10);
+    while(true) {
         clk->write(0);
         delay(10);
         clk->write(1);
         delay(10);
     }
-    finish();
 };
 
 void monitor() {
@@ -54,9 +51,12 @@ int vmain(int argc, char *argv[])
     Process* p = create("clkgen",clkgen);
     Process* p2 = create("monitor", monitor);
     Process* p3 = create("monitor2", monitor2);
-    wait(p);
     wait(p2);
     wait(p3);
+
+    delay(1000);
+    terminate(p);
+    
     cout << "vmain end" << endl;
     return 0;
 }
