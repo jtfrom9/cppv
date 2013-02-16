@@ -5,34 +5,12 @@ module skel();
    reg clk;
    wire clko;
 
-   initial begin
-      A = 0;
-      B = 0;
-      # 10;
-      A = 1;
-      # 10;
-      B = 1;
-   end
-   
-   
-   //wire [15:0] C;
-   //test t( .A(16'h0), .B(16'h0), .C(), .clk(clk));
    test t( A, B, C, clk, clko );
-
-   // initial begin
-   //    $load_veriepy_script;
-   // end
 
    initial begin
       $dumpvars;
       //$vcdpluson;
    end
-
-   // initial begin
-   //    clk =0;
-   //    #200 $finish;
-   // end
-   //always #10 clk = ~clk;
    
 endmodule
 
@@ -55,19 +33,10 @@ module test(
    end
 
    assign clko = ~clk;
-   // reg clko;
-   // always @(clk) begin
-   //    #1;
-   //    clko <= ~clk;
-   // end
    
-
-   // always @(clko)
-   //   $display($time, ": clk=%0d, clko=%0d", clk, clko);
-
-   always @* begin
-     $display($time, ": clko=%0d",clko);
-   end
+   // always @* begin
+   //   $display($time, ": clko=%0d",clko);
+   // end
    
 endmodule
 

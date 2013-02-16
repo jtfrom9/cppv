@@ -30,9 +30,26 @@ void monitor() {
     }
 };
 
+void geninput() {
+    Reg* A = top().get_reg("A");
+    Reg* B = top().get_reg("B");
+
+    A->write(0);
+    B->write(0);
+
+    for(int a=0; a<16; a++) {
+        A->write(a);
+        delay(20);
+        for(int b=0; b<16; b++) {
+            B->write(b);
+            delay(3);
+        }
+    }
+}
+
 void monitor2() {
     Wire* C = top().get_wire("C");
-    for(int i=0; i<3; i++) {
+    while(true) {
         wait(C);
         cout << format("time: %4d, C=%s") % sim_time() % C->readvec()
              << endl;

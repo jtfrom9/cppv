@@ -22,23 +22,23 @@ private:
 
     typedef std::list<SimulatorCallback*> callback_container;
     callback_container _callbacks;
-
-private:
-    mutable s_vpi_value _val;
-    mutable s_vpi_time  _time;
+    t_vpi_vecval* _write_buf;
 
 protected:
     vpiHandle _handle;
-    
+
     // ctor
     VPIObject(vpiHandle h): 
         _handle(h) 
-    {}
+    {
+        _write_buf = new t_vpi_vecval[ VectorValue::num_of_vecvals(width()) ];
+    }
 
     // dtor
     virtual ~VPIObject() 
     {
         //vpi_release_handle( _handle );
+        delete[] _write_buf;
     }
 
     PLI_INT32 __vpi_get(PLI_INT32 prop, const char* fname) const
@@ -90,26 +90,54 @@ public:
         return (int)_vpi_get(vpiSize);
     }
 
-    void write_nodely( bool b ) {
-        std::memset(&_val,0,sizeof(_val));
-        _val.format    = vpiBinStrVal;
-        _val.value.str = const_cast<char*>((b) ? "1" : "0");
-
-        std::memset(&_time,0,sizeof(_time));
-        _time.type = vpiSimTime;
-
-        //vpi_put_value(_handle, &_val, &_time, vpiInertialDelay);
-        //vpi_put_value(_handle, &_val, &_time, vpiTransportDelay);
-        vpi_put_value(_handle, &_val, NULL, vpiNoDelay);
+private:
+    void _put_no_delay( s_vpi_value& val ) {
+        vpi_put_value(_handle, &val, NULL, vpiNoDelay);
+    }
+    void _put_inertial_delay( s_vpi_value& val, s_vpi_time& _time ) {
+        vpi_put_value(_handle, &val, &_time, vpiInertialDelay);
+    }
+    void _put_transport_delay( s_vpi_value& val, s_vpi_time& _time ) {
+        vpi_put_value(_handle, &val, &_time, vpiTransportDelay);
     }
 
-    void write( bool b ) { write_nodely( b ); }
+public:
+    void write_no_delay( bool b ) {
+        s_vpi_value val;
+        val.format    = vpiBinStrVal;
+        val.value.str = const_cast<char*>((b) ? "1" : "0");
+        _put_no_delay( val );
+    }
+    void write( bool b ) { write_no_delay( b ); }
+
+    void write_no_delay( int i ) {
+        s_vpi_value val;
+        val.format        = vpiIntVal;
+        val.value.integer = i;
+        _put_no_delay( val );
+    }
+    void write( int i ) { write_no_delay( i ); }
+
+    void write_no_delay( vecval v ) {
+        s_vpi_value val;
+        
+        if( width()!=v.width() )
+            throw std::invalid_argument((format("write: diffrent vecval width. %s is %d bits") 
+                                         % name() % width()).str());
+        val.format = vpiVectorVal;
+        val.value.vector = _write_buf;
+        for(unsigned int i=0; i<VectorValue::num_of_vecvals(width()); i++) {
+            val.value.vector[i] = v.get_raw_vecval(i);
+        }
+        _put_no_delay( val );
+    }
+    void write( vecval v ) { write_no_delay(v); }
 
     vecval readvec() const {
-        std::memset(&_val,0,sizeof(_val));
-        _val.format  = vpiVectorVal;
-        vpi_get_value(_handle, &_val);
-        return VectorValue::create(_val.value.vector, width());
+        s_vpi_value val;
+        val.format  = vpiVectorVal;
+        vpi_get_value(_handle, &val);
+        return VectorValue::create(val.value.vector, width());
     }
     
     virtual std::string str() const = 0;

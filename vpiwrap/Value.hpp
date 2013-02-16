@@ -77,6 +77,10 @@ public:
     typedef std::vector<t_vpi_vecval> vecvals_container;
     typedef boost::shared_ptr<vecvals_container> vecvals_container_p;
 
+    static unsigned int num_of_vecvals( unsigned int width ) {
+        return ((width - 1) / 32) + 1;
+    }
+
 private:
     boost::shared_ptr<vecvals_container> _vecvals;
     unsigned int _width;
@@ -85,7 +89,7 @@ private:
 
     bool _width_check( unsigned int num_vecvals, unsigned int width )
     {
-        return num_vecvals >= ((width - 1) / 32) + 1;
+        return num_vecvals >= num_of_vecvals(width);
     }
 
     void _init_has_xz() {
@@ -114,7 +118,7 @@ public:
     static VectorValue create( t_vpi_vecval* vpi_vecval_array, int width )
     {
         vecvals_container_p vecvals_p(new vecvals_container());
-        for(int i=0; i< ((width -1) / 32 + 1); i++) {
+        for(unsigned int i=0; i< num_of_vecvals(width); i++) {
             vecvals_p->push_back( vpi_vecval_array[i] );
         }
         return VectorValue(vecvals_p, width);
@@ -162,6 +166,11 @@ public:
 
     operator int() const          { return to_int(); }
     operator unsigned int() const { return to_uint(); }
+
+    unsigned int get_raw_vecval_size() const { return _vecvals->size(); }
+    t_vpi_vecval get_raw_vecval(unsigned int index) const {
+        return (*_vecvals)[ index ];
+    }
 };
 
 typedef VectorValue vecval;
