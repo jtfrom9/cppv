@@ -6,7 +6,12 @@
 #include "boost/noncopyable.hpp"
 #include "boost/function.hpp"
 
-#include "objects.hpp"
+#include "util.hpp"
+#include "Object.hpp"
+
+namespace vpi {
+
+using std::list;
 
 class Context;
 class Request;
@@ -46,7 +51,7 @@ private:
     sleep_reason_t _sleep_reason;
     end_reason_t   _end_reason;
 
-    typedef std::list<ProcessCallback*> callback_container;
+    typedef list<ProcessCallback*> callback_container;
     callback_container _callbacks;
 
 public:
@@ -61,7 +66,7 @@ protected:
 
     void delay( int cycle );
     void wait( Process* proc );
-    void wait( VPIObject* obj );
+    void wait( IReadableSignal* obj );
     Process* create(Process* proc);
     void terminate( Process* proc, bool block = true );
     void finish();
@@ -86,19 +91,19 @@ public:
     // friend functions
     friend void delay( int cycle );
     friend void wait( Process* proc );
-    friend void wait( VPIObject* obj );
+    friend void wait( IReadableSignal* obj );
     friend Process* create( Process* proc );
     friend Process* create( const char* name, boost::function<void()> func );
     friend void terminate( Process* proc, bool block );
     friend void finish();
 };
 
-
-
+//
 // global APIs
+//
 void delay( int cycle );
 void wait( Process* proc );
-void wait( VPIObject* proc );
+void wait( IReadableSignal* obj );
 Process* create( Process* proc );
 Process* create( const char* name, boost::function<void()> func );
 void terminate( Process* proc, bool block=true );
@@ -106,4 +111,5 @@ void finish();
 long long sim_time();
 Module& top();
 
+} // namespace vpi
 #endif

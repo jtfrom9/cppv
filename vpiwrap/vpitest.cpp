@@ -2,14 +2,7 @@
 using std::cout;
 using std::endl;
 
-#include "boost/format.hpp"
-using boost::format;
-
-#include "Simulator.hpp"
-#include "Process.hpp"
-#include "ProcessManager.hpp"
-
-#include "Value.hpp"
+#include "vpi.hpp"
 
 void clkgen() {
     Reg* clk = top().get_reg("clk");
@@ -64,10 +57,9 @@ int vmain(int argc, char *argv[])
     cout << format("vecval = %s") % v  << endl;
     cout << "vecval = " << v << endl;
 
-    Process* p = create("clkgen",clkgen);
-    Process* p2 = create("monitor", monitor);
-    Process* p3 = create("monitor2", monitor2);
-    wait(p3);
+    Process* clkgen_p = create("clkgen",clkgen);
+    Process* mon_p    = create("monitor", monitor);
+    Process* mon2_p   = create("monitor2", monitor2);
 
     delay(1000);
     //terminate(p);

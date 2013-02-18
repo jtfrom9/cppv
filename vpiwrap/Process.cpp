@@ -13,6 +13,7 @@ using boost::shared_ptr;
 #include "Request.hpp"
 #include "generator.hpp"
 
+namespace vpi {
 
 class Context: public generic_generator<Request*>
 {
@@ -111,7 +112,7 @@ void Process::wait( Process* proc ) {
 }
 
 // protected
-void Process::wait( VPIObject* obj ) {
+void Process::wait( IReadableSignal* obj ) {
     shared_ptr<Request> p( new WaitValueChangeRequest(this, obj) );
     _sleep_reason = WAIT_FOR_VALUECHANGE;
     _context->yield_send( p.get() );
@@ -139,42 +140,39 @@ void Process::finish() {
     _context->yield_send( p.get() );
 }
 
+//
 // global function
+//
 void delay( int cycle )
 {
     Process *currentProcess = ProcessManager::get().getCurrent();
     currentProcess->delay( cycle );
 }
 
-// global function
 void wait( Process* proc )
 {
     Process *currentProcess = ProcessManager::get().getCurrent();
     return currentProcess->wait( proc );
 }
 
-// global function
-void wait( VPIObject* obj )
+void wait( IReadableSignal* obj )
 {
     Process *currentProcess = ProcessManager::get().getCurrent();
     return currentProcess->wait( obj );
 }
 
-// global function
 Process* create( Process* proc )
 {
     Process *currentProcess = ProcessManager::get().getCurrent();
     return currentProcess->create( proc );
 }
 
-// global function
 void terminate( Process* proc, bool block )
 {
     Process *currentProcess = ProcessManager::get().getCurrent();
     return currentProcess->terminate( proc, block );
 }
 
-// global function
 void finish()
 {
     Process *currentProcess = ProcessManager::get().getCurrent();
@@ -210,3 +208,5 @@ Module& top()
 {
     return ProcessManager::get().getSimulator().getModule(0);
 }
+
+} // namespace vpi

@@ -1,12 +1,15 @@
 #include <string>
+#include <cstring>
 #include <sstream>
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
 
 #include "util.hpp"
-#include "objects.hpp"
+#include "ObjectImpl.hpp"
 #include "Simulator.hpp"
+
+namespace vpi {
 
 using std::string;
 using std::vector;
@@ -14,13 +17,14 @@ using std::stringstream;
 using std::invalid_argument;
 using std::runtime_error;
 
+namespace internal {
 
 class Request;
 
 class SimulatorImpl: public Simulator
 {
 private:
-    vector<Module*> _modules;
+    vector<ModuleImpl*> _modules;
     mutable int count;
 
     struct vpi_timer_event_descriptor
@@ -45,11 +49,11 @@ public:
     // ctor
     SimulatorImpl() 
     {
-        Simulator::scanModules(_modules);
+        ModuleImpl::scanModules(_modules,0);
         count = 0;
     }
 
-    VPIObject& getObject(const char* path) const
+    Object& getObject(const char* path) const
     {
         throw not_implemented(string(__func__));
     }
@@ -66,8 +70,8 @@ public:
 
     Module& getModule( const char* path ) const
     {
-        vector<Module*>::const_iterator pm;
-        if((pm = std::find_if(_modules.begin(), _modules.end(), VPIObject::predNameOf(path))) == _modules.end()) {
+        vector<ModuleImpl*>::const_iterator pm;
+        if((pm = std::find_if(_modules.begin(), _modules.end(), Object::predNameOf(path))) == _modules.end()) {
             throw invalid_argument(string(__func__) + ": not found: " + path);
         }
         return **pm;
@@ -141,70 +145,18 @@ public:
     }
 }; // SimulatorImpl
 
+} // namespace internal
+
 
 // static
-void Simulator::scanRegs( vector<Reg*>& regs, const VPIObject& vpiObj )
-{
-    vpiHandle iter = vpi_iterate(vpiReg, vpiObj.handle());
-    vpiHandle ph;
-    if(iter==NULL) 
-        throw SimulatorError(string(__func__) + ": fail to scan vpiReg");
-    while((ph = vpi_scan(iter)) != NULL) {
-        regs.push_back( new Reg(ph) );
-    }
-}
-
-// static
-void Simulator::scanWires( vector<Wire*>& wires, const VPIObject& vpiObj )
-{
-    vpiHandle iter = vpi_iterate(vpiNet, vpiObj.handle());
-    vpiHandle ph;
-    if(iter==NULL) 
-        throw SimulatorError(string(__func__) + ": fail to scan vpiWire");
-    while((ph = vpi_scan(iter)) != NULL) {
-        wires.push_back( new Wire(ph) );
-    }
-}
-
-// static
-/*
-void Simulator::scanPorts( vector<Port*>& ports, const VPIObject& vpiObj )
-{
-    vpiHandle iter = vpi_iterate(vpiPort, vpiObj.handle());
-    vpiHandle ph;
-    if(iter==NULL) 
-        throw SimulatorError(string(__func__) + ": fail to scan vpiPort");
-    while((ph = vpi_scan(iter)) != NULL) {
-        ports.push_back( Port::create(ph) );
-    }
-}
-*/
-
-// static
-void Simulator::scanModules( vector<Module*>& mods, const VPIObject* obj ) 
-{
-    vpiHandle mod_iter = vpi_iterate(vpiModule, (obj==0) ? NULL : obj->handle());
-        
-    if (mod_iter==NULL)
-        throw SimulatorError(string(__func__) + ": fail to scan vpiModule");
-
-    while(1) {
-        vpiHandle modh;
-        if((modh = vpi_scan(mod_iter)) == NULL)
-            break;
-        mods.push_back( new Module(modh) );
-    }
-}
-
-// static
-static SimulatorImpl* simInstance = 0;
+static internal::SimulatorImpl* simInstance = 0;
 
 Simulator* Simulator::create()
 {
     if( simInstance == 0 ) {
-        simInstance = new SimulatorImpl();
+        simInstance = new internal::SimulatorImpl();
     }
     return simInstance;
 }
 
-
+} // namespace vpi

@@ -5,6 +5,8 @@
 
 #include "Process.hpp"
 
+namespace vpi {
+
 class Process;
 class Simulator;
 
@@ -32,4 +34,5 @@ public:
 
 };
 
+} // namespace vpi
 #endif

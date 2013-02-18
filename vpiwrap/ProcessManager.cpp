@@ -4,17 +4,20 @@
 #include <stdexcept>
 #include <algorithm>
 
+#include "util.hpp"
+#include "Process.hpp"
+#include "ProcessManager.hpp"
+#include "Request.hpp"
+#include "generator.hpp"
+
+namespace vpi {
+
 using std::string;
 using std::stringstream;
 using std::list;
 using std::invalid_argument;
 using std::runtime_error;
 
-#include "util.hpp"
-#include "Process.hpp"
-#include "ProcessManager.hpp"
-#include "Request.hpp"
-#include "generator.hpp"
 
 class ProcessManagerImpl: public ProcessManager
 {
@@ -198,4 +201,4 @@ ProcessManager& ProcessManager::get()
     return *managerInst;
 }
 
-
+} // namespace vpi

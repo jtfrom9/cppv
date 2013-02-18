@@ -4,6 +4,8 @@
 
 #include "vpi_user.h"
 
+using namespace vpi;
+
 extern int vmain(int argc, char* argv[]);
 
 class MainProcess: public Process

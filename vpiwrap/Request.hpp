@@ -7,9 +7,11 @@
 #include "boost/noncopyable.hpp"
 
 #include "util.hpp"
-#include "objects.hpp"
+#include "Object.hpp"
 #include "Simulator.hpp"
 #include "ProcessManager.hpp"
+
+namespace vpi {
 
 class Process;
 
@@ -73,12 +75,13 @@ public:
     }
 };
 
+
 class WaitValueChangeRequest: public Request, public SimulatorCallback
 {
-    VPIObject* _obj;
+    IReadableSignal* _obj;
 
 public:
-    WaitValueChangeRequest( Process* proc, VPIObject* obj ):
+    WaitValueChangeRequest( Process* proc, IReadableSignal* obj ):
         Request( proc ),
         _obj( obj )
     {}
@@ -197,6 +200,7 @@ public:
     }
 };
 
+
 class FinishSimulationRequest: public Request
 {
 public:
@@ -214,4 +218,5 @@ public:
     }
 };
 
+} // namespace vpi
 #endif
