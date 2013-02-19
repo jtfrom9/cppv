@@ -1,4 +1,4 @@
-TARGET = libvpicpp-vcs.so
+TESTBENCH_LIB = libvpicpp-vcs.so
 
 ifeq ($(strip $(VCS_HOME)),)
 	VCS_HOME=/opt/synopsys/latest
@@ -6,13 +6,19 @@ endif
 
 CFLAGS += -I$(VCS_HOME)/include
 
-simbuild: compile
-	vcs +vpi +v2k -debug_pp +cli test.v -load $(TARGET):initialCallback 
+SIMBIN = $(TEST)_simv
 
-run: simbuild
-	LD_LIBRARY_PATH=$(shell pwd) simv -l simv.log 
+$(SIMBIN): $(RTLFILES) 
+	$(VCS_HOME)/bin/vcs +vpi +v2k -debug_pp +cli $^ -load $(TESTBENCH_LIB):$(INITCALLBACK) -o$@
 
-.PHONY: clean_sim
-clean_sim:
-	rm -rf csrc simv* ucli.key
+sim: lib $(SIMBIN)
+
+RUN_COMMAND=LD_LIBRARY_PATH=$(shell pwd) $(SIMBIN) -l $(SIMBIN).log
+
+build: sim
+
+.PHONY: cleansim
+cleansim:
+	rm -rf csrc simv* ucli.key $(SIMBIN) $(SIMBIN).log
+
 

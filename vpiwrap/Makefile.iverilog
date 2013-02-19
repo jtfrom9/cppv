@@ -1,16 +1,22 @@
-TARGET = libvpicpp-iverilog.vpi
+TESTBENCH_LIB = libvpicpp-iverilog.vpi
 
 CFLAGS += -I$(IVERILOG_VPI_INC_DIR)
 LDFLAGS += -L$(IVERILOG_VPI_LIB_DIR) -lvpi
 
-compilesim: compile
-	$(IVERILOG_BIN_DIR)/iverilog test.v -s$(TOP)
+SIMBIN = $(TEST)_iverilog.exe
 
-run: compilesim
-	$(IVERILOG_BIN_DIR)/vvp -m./$(TARGET:.vpi=) a.out
+RUN_COMMAND=$(IVERILOG_BIN_DIR)/vvp -m./$(TESTBENCH_LIB:.vpi=) $(SIMBIN)
 
-.PHONY: clean_sim
-clean_sim:
-	rm -rf a.out
+
+$(SIMBIN): $(RTLFILES)
+	$(IVERILOG_BIN_DIR)/iverilog $^ -s$(TOP) -o$@
+
+sim: $(SIMBIN)
+
+build: lib sim
+
+.PHONY: cleansim
+cleansim:
+	rm -rf $(SIMBIN) dump.vcd
 
 

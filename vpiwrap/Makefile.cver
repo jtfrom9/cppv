@@ -1,12 +1,13 @@
-TARGET = libvpicpp-cver.so
+TESTBENCH_LIB = libvpicpp-cver.so
 
 CFLAGS += -I$(CVER_VPI_INC_DIR)
 
-run: compile
-	cver +loadvpi=./$(TARGET):initialCallback test.v 
+RUN_COMMAND=cver +loadvpi=./$(TESTBENCH_LIB):$(INITCALLBACK) $(RTLFILES)
+
+build: lib
 
 .PHONY: clean_sim
-clean_sim:
-	rm -rf verilog.log
+cleansim:
+	rm -rf verilog.log verilog.dump
 
 

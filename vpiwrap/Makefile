@@ -1,8 +1,3 @@
-CC=g++
-CFLAGS+=-Wall -fpic -std=c++0x -I.
-LDFLAGS+=-shared
-DEPFILE=makefile.dep
-
 ifeq ($(strip $(SIM)),)
 	SIM := vcs
 endif
@@ -11,29 +6,47 @@ ifeq ($(strip $(TOP)),)
 	TOP := top
 endif
 
-all: dep compile
+ifeq ($(strip $(BASEDIR)),)
+	BASEDIR := .
+endif
 
-include Makefile.$(SIM)
+VPATH = $(BASEDIR)
 
-OBJS = vpitest.o startup.o Simulator.o Process.o ProcessManager.o Value.o ObjectImpl.o
+CC			= g++
+CFLAGS     += -Wall -fPIC -std=c++0x -I$(BASEDIR)
+LDFLAGS	   += -shared
+DEPFILE		= makefile.dep
+INITCALLBACK=initialCallback
+
+all: dep build
+
+include $(BASEDIR)/Makefile.$(SIM)
+
+VPICPP_OBJS = startup.o Simulator.o Process.o ProcessManager.o Value.o ObjectImpl.o
 
 .cpp.o: 
 	$(CC) $(CFLAGS) -c $<
 
-$(TARGET): $(OBJS)
+$(TESTBENCH_LIB): $(VPICPP_OBJS) $(TESTBENCH_OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
 
-compile: $(TARGET)
+lib: $(TESTBENCH_LIB) 
 
-clean: clean_sim
-	rm -rf *~ *.o $(OBJS) $(TARGET) $(DEPFILE)
+run: build
+	$(RUN_COMMAND)
+
+debug: build
+	gdb -tui --arg $(RUN_COMMAND)
+
+clean: cleansim
+	rm -rf *~ *.o $(VPICPP_OBJS) $(TESTBENCH_OBJS) $(TESTBENCH_LIB) $(DEPFILE)
 
 cleanall:
 	for sim in cver iverilog vcs; do \
 		SIM=$$sim make clean; \
 	done
 
-compileall:
+buildliball:
 	for sim in cver iverilog vcs; do \
 		echo compilng $$sim ...; \
 		echo; \
@@ -42,6 +55,9 @@ compileall:
 	done
 
 dep: 
-	g++ -MM $(CFLAGS) $(OBJS:.o=.cpp)  | sed -b -e 's/[a-zA-Z0-9_-]*\.cpp//g' > $(DEPFILE)
-
+	g++ -MM $(CFLAGS) \
+	$(addprefix $(BASEDIR)/,$(VPICPP_OBJS:.o=.cpp)) \
+	$(TESTBENCH_OBJS:.o=.cpp) \
+	| sed -b -e 's/[a-zA-Z0-9_-]*\.cpp//g' > $(DEPFILE)
 -include $(DEPFILE)
+
