@@ -2,7 +2,9 @@
 using std::cout;
 using std::endl;
 
-#include "vpi.hpp"
+#include "Process.hpp"
+using namespace vpi;
+using vpi::wait;
 
 void clkgen() {
     Reg* clk = top().get_reg("clk");
@@ -14,16 +16,7 @@ void clkgen() {
     }
 };
 
-void monitor() {
-    Wire* clko = top().get_wire("clko");
-    while(true) {
-        wait(clko);
-        cout << format("time: %4d, clko=%s") % sim_time() % clko->readvec() 
-             << endl;
-    }
-};
-
-void geninput() {
+void datagen() {
     Reg* A = top().get_reg("A");
     Reg* B = top().get_reg("B");
 
@@ -40,11 +33,17 @@ void geninput() {
     }
 }
 
-void monitor2() {
+void outmon() {
     Wire* C = top().get_wire("C");
+    IReadableSignal* A = top().get_reg("A");
+    IReadableSignal* B = top().get_reg("B");
     while(true) {
         wait(C);
-        cout << format("time: %4d, C=%s") % sim_time() % C->readvec()
+        cout << format("time: %4d, A=%s, B=%s, C=%s") 
+            % sim_time() 
+            % A->readvec()
+            % B->readvec()
+            % C->readvec()
              << endl;
     }
 };
@@ -55,15 +54,13 @@ int vmain(int argc, char *argv[])
 
     vecval v = make_vecval2("0011zX10");
     cout << format("vecval = %s") % v  << endl;
-    cout << "vecval = " << v << endl;
+    cout << "vecval = " << v.bits_str() << endl;
 
     Process* clkgen_p = create("clkgen",clkgen);
-    Process* mon_p    = create("monitor", monitor);
-    Process* mon2_p   = create("monitor2", monitor2);
+    Process* dgen_p   = create("datagen", datagen);
+    Process* omon_p   = create("outmon", outmon);
 
-    delay(1000);
-    //terminate(p);
-    //terminate(p2);
+    wait(dgen_p);
     
     delay(1000);
     finish();
