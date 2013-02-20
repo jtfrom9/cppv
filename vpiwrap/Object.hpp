@@ -97,11 +97,11 @@ public:
 };
 
 
-class IReadableSignal
+class ISignal
 {
 public:
     // dtor
-    virtual ~IReadableSignal()
+    virtual ~ISignal()
     {}
 
     virtual int width() const = 0;
@@ -159,7 +159,7 @@ public:
 
 
 class Wire: public Object,
-            public IReadableSignal
+            public ISignal
 {
 public:
     // dtor
@@ -173,7 +173,7 @@ public:
 
 
 class Reg: public Object,
-           public IReadableSignal,
+           public ISignal,
            public IWritableSignal
 {
 public:

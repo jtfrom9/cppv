@@ -78,10 +78,10 @@ public:
 
 class WaitValueChangeRequest: public Request, public SimulatorCallback
 {
-    IReadableSignal* _obj;
+    ISignal* _obj;
 
 public:
-    WaitValueChangeRequest( Process* proc, IReadableSignal* obj ):
+    WaitValueChangeRequest( Process* proc, ISignal* obj ):
         Request( proc ),
         _obj( obj )
     {}

@@ -35,8 +35,8 @@ void datagen() {
 
 void outmon() {
     Wire* C = top().get_wire("C");
-    IReadableSignal* A = top().get_reg("A");
-    IReadableSignal* B = top().get_reg("B");
+    ISignal* A = top().get_reg("A");
+    ISignal* B = top().get_reg("B");
     while(true) {
         wait(C);
         cout << format("time: %4d, A=%s, B=%s, C=%s") 

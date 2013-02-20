@@ -16,8 +16,6 @@ using std::list;
 class Context;
 class Request;
 
-class ISignal {};
-
 class ProcessCallback
 {
 public:
@@ -66,7 +64,7 @@ protected:
 
     void delay( int cycle );
     void wait( Process* proc );
-    void wait( IReadableSignal* obj );
+    void wait( ISignal* obj );
     Process* create(Process* proc);
     void terminate( Process* proc, bool block = true );
     void finish();
@@ -91,7 +89,7 @@ public:
     // friend functions
     friend void delay( int cycle );
     friend void wait( Process* proc );
-    friend void wait( IReadableSignal* obj );
+    friend void wait( ISignal* obj );
     friend Process* create( Process* proc );
     friend Process* create( const char* name, boost::function<void()> func );
     friend void terminate( Process* proc, bool block );
@@ -103,7 +101,7 @@ public:
 //
 void delay( int cycle );
 void wait( Process* proc );
-void wait( IReadableSignal* obj );
+void wait( ISignal* obj );
 Process* create( Process* proc );
 Process* create( const char* name, boost::function<void()> func );
 void terminate( Process* proc, bool block=true );
