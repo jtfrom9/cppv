@@ -32,6 +32,7 @@ private:
     process_container _end_list;
 
     bool _finished;
+    bool _raising;
 
     // dtor
     ~ProcessManagerImpl()
@@ -42,7 +43,8 @@ public:
     ProcessManagerImpl( const Simulator* sim ): 
         _sim(sim), 
         _current(0),
-        _finished(false)
+        _finished(false),
+        _raising(false)
     {}
 
     Process* getCurrent() const 
@@ -157,7 +159,12 @@ public:
         if (_finished) return;
 
         run( proc );
-        schedule();
+
+        if (!_raising) {
+            _raising = true;
+            schedule();
+            _raising = false;
+        }
     }
 
     const Simulator& getSimulator() 
