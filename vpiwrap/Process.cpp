@@ -53,7 +53,9 @@ Process::~Process()
 // public for ProcessManager
 void Process::resume()
 {
-    bool terminated, abort;
+    bool terminated=false;
+    bool abort=false;
+
     _status = RUN;
     try {
         _context->next();
@@ -61,6 +63,7 @@ void Process::resume()
     catch(const stop_iteration& e) {
         terminated = e.terminated;
         abort      = e.abort;
+        _abort_msg  = e.except_msg;
     }
     if (_context->end()) {
         _status = END;

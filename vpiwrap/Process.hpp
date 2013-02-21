@@ -48,6 +48,7 @@ private:
     status_t       _status;
     sleep_reason_t _sleep_reason;
     end_reason_t   _end_reason;
+    string         _abort_msg;
 
     typedef list<ProcessCallback*> callback_container;
     callback_container _callbacks;
@@ -82,6 +83,7 @@ public:
 
     sleep_reason_t sleep_reason() const { return _sleep_reason; }
     end_reason_t end_reason() const     { return _end_reason; }
+    string abort_msg() const            { return _abort_msg; }
 
     void addEndCallback( ProcessCallback* cb );
 
