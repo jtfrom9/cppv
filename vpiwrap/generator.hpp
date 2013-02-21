@@ -3,6 +3,7 @@
 #include <exception>
 #include <stdexcept>
 #include <iostream>
+#include <string>
 
 #include <ucontext.h>
 
@@ -13,17 +14,26 @@ struct stop_iteration: std::exception
 public:
     bool terminated;
     bool abort;
+    std::string except_msg;
 
-    stop_iteration(bool _terminated, bool _abort):
+    stop_iteration(bool _terminated, bool _abort, std::string _except_msg):
         terminated(_terminated),
-        abort(_abort)
+        abort(_abort),
+        except_msg(_except_msg)
     {}
 
-    const char* what() const throw() {
-        static char msg[256];
+    virtual ~stop_iteration() throw()
+    {}
+
+    const char* what() const throw() 
+    {
+        static char msg[512];
         std::strncpy(msg, 
-                     (boost::format("stop_iteration: terminated=%d, abort=%d") 
-                      % terminated %abort ).str().c_str(),
+                     (boost::format("stop_iteration: terminated=%d, abort=%d%s") 
+                      % terminated 
+                      % abort 
+                      % ((!abort) ? "" : (boost::format("(msg=)") % except_msg).str()))
+                     .str().c_str(),
                      sizeof(msg));
         return msg;
     }
@@ -39,12 +49,15 @@ private:
     bool  _end;
     bool  _terminated;
     bool  _abort;
+    
+    std::string _except_msg;
 
     static void callChild(generator* gen) {
         try {
             gen->body();
         }
         catch(const std::exception& e) {
+            gen->_except_msg = e.what();
             gen->_abort = true;
         }
         gen->_end = true;
@@ -79,7 +92,7 @@ public:
     {
         if(_end || _terminated) {
             _end = true;
-            throw stop_iteration(_terminated,_abort);
+            throw stop_iteration(_terminated,_abort,_except_msg);
         }
         if(swapcontext(&_context_parent, &_context_child) == -1)
             throw std::runtime_error("next: fail @ swapcontext");
