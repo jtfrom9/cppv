@@ -9,7 +9,7 @@ CFLAGS += -I$(VCS_HOME)/include
 SIMBIN = $(TEST)_simv
 
 $(SIMBIN): $(RTLFILES) 
-	$(VCS_HOME)/bin/vcs +vpi +v2k -debug_pp +cli $^ -load $(TESTBENCH_LIB):$(INITCALLBACK) -o$@
+	$(VCS_HOME)/bin/vcs +vpi +v2k -debug_pp +cli $^ -load $(TESTBENCH_LIB):$(INITCALLBACK) -o $@
 
 sim: lib $(SIMBIN)
 
