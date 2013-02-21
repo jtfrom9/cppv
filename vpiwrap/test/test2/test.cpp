@@ -59,21 +59,38 @@ void reset(int cycle)
 
 void write(int _addr, int _dat)
 {
-    addr->write(_addr);
+    addr->write(_addr * 2);
     dwrite->write(_dat);
     req->write(1);
     wen->write(1);
     
-    // while( !ack->readb() )
-    //     wait( posedge(clk) );
-
-    while(true) {
-        if (ack->readb())
-            break;
-        wait(ack);
-    }
+    while( ack->readi() == 0 )      // wait ack==1
+        wait( posedge(clk) );
     
     req->write(0);
+
+    while( ack->readi() == 1 )      // wait ack==0
+        wait( posedge(clk) );
+}
+
+int read(int _addr)
+{
+    int ret;
+    addr->write(_addr * 2);
+    req->write(1);
+    wen->write(0);
+    
+    while( ack->readi() == 0 )
+        wait( posedge(clk) );
+
+    ret = dread->readi();
+    
+    req->write(0);
+    
+    while( ack->readi() == 1 )      // wait ack==0
+        wait( posedge(clk) );
+
+    return ret;
 }
 
 int vmain(int argc, char *argv[])
@@ -88,15 +105,17 @@ int vmain(int argc, char *argv[])
 
     delay(1000);
 
-    for(int addr=0; addr<16; addr++) {
+    for(int addr=0; addr<8*1024; addr++) {
         write(addr,addr);
-        //wait( posedge(clk) );
-        delay(100);
+        wait( posedge(clk) );
     }
 
-    // delay(100);
-    //terminate(p);
+    for(int addr=0; addr<8*1024; addr++) {
+        cout << format("addr=%04x, data=%04x") % addr % read(addr) << endl;
+        wait( posedge(clk) );
+    }
 
+    delay(1000);
     finish();
     return 0;
 }

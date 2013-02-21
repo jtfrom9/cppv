@@ -11,6 +11,11 @@ module top;
    mem m( clk, n_rst,
           addr, dwrite, dread, req, wen,
           ack );
+
+   initial begin
+      $dumpvars;
+   end
+   
 endmodule
 
 module mem(CLK, nRST,
@@ -43,10 +48,6 @@ module mem(CLK, nRST,
         mem[i] = 0;
    end
 
-   // always@(CLK) begin
-   //    $display($time, " CLK=%0d", CLK);
-   // end
-   
    always@(posedge CLK or nRST) begin
       if (~nRST) begin
          dout <= 0;
@@ -58,12 +59,10 @@ module mem(CLK, nRST,
            0: begin
               if(REQ) begin
                  if(WEN) begin
-                    { mem[ ADDR ], mem[ ADDR+1 ] } <= DIN;
-                    $display($time, " Write: addr=%0x, data=%0x", ADDR, DIN);
+                    { mem[ ADDR+1 ], mem[ ADDR ] } <= DIN;
                  end
                  else begin
-                   dout <= { mem[ADDR] , mem[ADDR+1] };
-                    $display($time, " Read: addr=%0x, data=%0x", ADDR, DOUT);
+                    dout <= { mem[ADDR+1] , mem[ADDR] };
                  end
                  
                  ack <= 1;
