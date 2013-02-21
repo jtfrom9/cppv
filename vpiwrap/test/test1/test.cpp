@@ -41,9 +41,9 @@ void outmon() {
         wait(C);
         cout << format("time: %4d, A=%s, B=%s, C=%s") 
             % sim_time() 
-            % A->readvec()
-            % B->readvec()
-            % C->readvec()
+            % A->readv()
+            % B->readv()
+            % C->readv()
              << endl;
     }
 };

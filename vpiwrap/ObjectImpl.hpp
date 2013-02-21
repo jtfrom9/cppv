@@ -68,7 +68,7 @@ public:
 
 template<typename T>
 class ReadableSignalMixin: public ReadableSignalMixinBase,
-                         virtual public T
+                           virtual public T
 {
 public:
     int width() const {
@@ -77,11 +77,18 @@ public:
 
     void setValueChangedCallback( SimulatorCallback* cb );
 
-    vecval readvec() const {
+    vecval readv() const {
         s_vpi_value val;
         val.format  = vpiVectorVal;
         vpi_get_value( T::handle(), &val );
         return VectorValue::create(val.value.vector, width());
+    }
+    
+    int readi() const {
+        s_vpi_value val;
+        val.format  = vpiIntVal;
+        vpi_get_value( T::handle(), &val );
+        return val.value.integer;
     }
 };
 

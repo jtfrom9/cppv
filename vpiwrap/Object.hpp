@@ -105,7 +105,18 @@ public:
     {}
 
     virtual int width() const = 0;
-    virtual vecval readvec() const = 0;
+
+    virtual vecval readv() const       = 0;
+    virtual int readi() const          = 0;
+
+    bool readb() const {
+        return static_cast<bool>(readi());
+    }
+
+    unsigned int readu() const {
+        return static_cast<unsigned int>(readi());
+    }
+
     virtual void setValueChangedCallback( SimulatorCallback* cb ) = 0;
 };
 
