@@ -118,10 +118,12 @@ public:
     }
 
     virtual void setValueChangedCallback( SimulatorCallback* cb ) = 0;
+
+    virtual ISignal& posedge() = 0;
 };
 
 
-class IWritableSignal
+class IWritableSignal: public ISignal
 {
 public:
     // dtor
@@ -184,7 +186,6 @@ public:
 
 
 class Reg: public Object,
-           public ISignal,
            public IWritableSignal
 {
 public:

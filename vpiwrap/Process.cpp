@@ -164,6 +164,11 @@ void wait( ISignal* obj )
     return currentProcess->wait( obj );
 }
 
+ISignal* posedge( ISignal* sig )
+{
+    return &sig->posedge();
+}
+
 Process* create( Process* proc )
 {
     Process *currentProcess = ProcessManager::get().getCurrent();

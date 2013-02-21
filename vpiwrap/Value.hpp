@@ -166,6 +166,7 @@ public:
 
     operator int() const          { return to_int(); }
     operator unsigned int() const { return to_uint(); }
+    operator bool() const         { return static_cast<bool>(to_int()); }
 
     unsigned int get_raw_vecval_size() const { return _vecvals->size(); }
     t_vpi_vecval get_raw_vecval(unsigned int index) const {

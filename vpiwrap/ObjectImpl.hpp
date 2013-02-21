@@ -67,10 +67,25 @@ public:
 
 
 template<typename T>
+class EdgeSenseSignal;
+
+template<typename T>
 class ReadableSignalMixin: public ReadableSignalMixinBase,
                            virtual public T
 {
+private:
+    mutable ISignal* _edge;
+
 public:
+    ReadableSignalMixin():
+        _edge(0)
+    {}
+
+    virtual ~ReadableSignalMixin()
+    {
+        delete _edge;
+    }
+
     int width() const {
         return (int)T::_vpi_get(vpiSize);
     }
@@ -89,6 +104,59 @@ public:
         val.format  = vpiIntVal;
         vpi_get_value( T::handle(), &val );
         return val.value.integer;
+    }
+
+    ISignal& posedge() {
+        if (_edge==0) {
+            _edge = new EdgeSenseSignal<T>( this, true );
+        }
+        return *_edge;
+    }
+};
+
+
+template<typename T>
+class EdgeSenseSignal: public ISignal
+{
+    ReadableSignalMixin<T>* _orig;
+    bool _positive;
+
+public:
+    EdgeSenseSignal( ReadableSignalMixin<T>* orig, bool positive ):
+        _orig( orig ),
+        _positive( positive )
+    {}
+
+    int width() const    { return _orig->width(); }
+    vecval readv() const { return _orig->readv(); }
+    int readi() const    { return _orig->readi(); }     
+
+    class internalCallback: public SimulatorCallback
+    {
+        EdgeSenseSignal* _sig;
+        SimulatorCallback* _cb;
+
+    public:
+        internalCallback( EdgeSenseSignal* sig, SimulatorCallback* cb ): 
+            _sig( sig ),
+            _cb( cb ) 
+        {}
+        void called() {
+            if( static_cast<bool>(_sig->readv()[0]) == _sig->_positive ) {
+                _cb->called();
+            } else {
+                _sig->_orig->setValueChangedCallback( this );
+            }
+        }
+    };
+
+    void setValueChangedCallback( SimulatorCallback* cb )
+    {
+        _orig->setValueChangedCallback( new internalCallback( this, cb ) );
+    }
+
+    ISignal& posedge() { 
+        throw SimulatorError("invalid posedge() call");
     }
 };
 

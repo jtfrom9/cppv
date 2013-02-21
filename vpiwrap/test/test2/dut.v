@@ -42,6 +42,10 @@ module mem(CLK, nRST,
       for(i=0; i<=memsize; i=i+1)
         mem[i] = 0;
    end
+
+   // always@(CLK) begin
+   //    $display($time, " CLK=%0d", CLK);
+   // end
    
    always@(posedge CLK or nRST) begin
       if (~nRST) begin
@@ -53,10 +57,15 @@ module mem(CLK, nRST,
          case(state)
            0: begin
               if(REQ) begin
-                 if(WEN) 
+                 if(WEN) begin
                     { mem[ ADDR ], mem[ ADDR+1 ] } <= DIN;
-                 else 
+                    $display($time, " Write: addr=%0x, data=%0x", ADDR, DIN);
+                 end
+                 else begin
                    dout <= { mem[ADDR] , mem[ADDR+1] };
+                    $display($time, " Read: addr=%0x, data=%0x", ADDR, DOUT);
+                 end
+                 
                  ack <= 1;
                  state <= 1;
               end

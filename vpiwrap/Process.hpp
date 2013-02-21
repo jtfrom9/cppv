@@ -104,6 +104,7 @@ public:
 void delay( int cycle );
 void wait( Process* proc );
 void wait( ISignal* obj );
+ISignal* posedge( ISignal* sig );
 Process* create( Process* proc );
 Process* create( const char* name, boost::function<void()> func );
 void terminate( Process* proc, bool block=true );
