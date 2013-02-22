@@ -22,7 +22,7 @@ all: dep build
 
 include $(BASEDIR)/Makefile.$(SIM)
 
-VPICPP_OBJS = startup.o Simulator.o Process.o ProcessManager.o Value.o ObjectImpl.o
+VPICPP_OBJS = startup.o Simulator.o Process.o ProcessManager.o Value.o ObjectImpl.o Signal.o
 
 .cpp.o: 
 	$(CC) $(CFLAGS) -c $<

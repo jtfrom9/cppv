@@ -6,8 +6,8 @@
 
 #include "boost/noncopyable.hpp"
 
+#include "util.hpp"
 #include "Simulator.hpp"
-#include "Value.hpp"
 
 #include "vpi_user.h"
 
@@ -97,62 +97,8 @@ public:
 };
 
 
-class ISignal
-{
-public:
-    // dtor
-    virtual ~ISignal()
-    {}
-
-    virtual int width() const = 0;
-
-    virtual vecval readv() const       = 0;
-    virtual int readi() const          = 0;
-
-    bool readb() const {
-        return static_cast<bool>(readi());
-    }
-
-    unsigned int readu() const {
-        return static_cast<unsigned int>(readi());
-    }
-
-    virtual void setValueChangedCallback( SimulatorCallback* cb ) = 0;
-
-    virtual ISignal& posedge() = 0;
-};
-
-
-class IWritableSignal: public ISignal
-{
-public:
-    // dtor
-    virtual ~IWritableSignal()
-    {}
-
-    virtual void write_no_delay( bool b )   = 0;
-    virtual void write_no_delay( int i )    = 0;
-    virtual void write_no_delay( const vecval& v ) = 0;
-
-    void write( bool b ) throw(std::exception) try {
-        write_no_delay( b ); 
-    } catch (const std::exception& e) {
-        throw invalid_argument((format("write(bool): %s") % e.what()).str());
-    }
-
-    void write( int i ) throw(std::exception) try {
-         write_no_delay( i ); 
-    } catch (const std::exception& e) {
-        throw invalid_argument((format("write(int): %s") % e.what()).str());
-    }
-
-    void write( const vecval& v ) throw(std::exception) try {
-        write_no_delay( v ); 
-    } catch (const std::exception& e) {
-        throw invalid_argument((format("write(vecval): %s") % e.what()).str());
-    } 
-};
-
+class Reg;
+class Wire;
 
 class Module: public Object
 {
@@ -165,38 +111,32 @@ public:
         return "Module";
     };
     
-    virtual Reg* get_reg(std::string name) const       = 0;
-    virtual Wire* get_wire(std::string name) const     = 0;
-    virtual Module* get_module(std::string name) const = 0;
+    virtual Reg* getReg_p( const string& name ) const       = 0;
+    virtual Wire* getWire_p( const string& name ) const     = 0;
+    virtual Module* getModule_p( const string& name ) const = 0;
+
+    Reg& getReg( const string& _name ) const {
+        Reg* r = getReg_p(_name);
+        if(r==0)
+            throw invalid_argument((format("getReg: '%s' not found in '%s'") % _name % name()).str());
+        return *r;
+    }
+    
+    Wire& getWire( const string& _name ) const {
+        Wire* w = getWire_p(_name);
+        if(w==0)
+            throw invalid_argument((format("getWire: wire '%s' not found in '%s'") % _name % name()).str());
+        return *w;
+    }
+
+    Module& getModule( const string& _name ) const {
+        Module* m = getModule_p(_name);
+        if(m==0)
+            throw invalid_argument((format("getModule: module '%s' not found in '%s'") % _name % name()).str());
+        return *m;
+    }
 };
 
-
-class Wire: public Object,
-            public ISignal
-{
-public:
-    // dtor
-    virtual ~Wire()
-    {}
-
-    const string type_str() const {
-        return "Wire";
-    };
-};
-
-
-class Reg: public Object,
-           public IWritableSignal
-{
-public:
-    //dtor
-    virtual ~Reg() 
-    {}
-
-    const string type_str() const {
-        return "Reg";
-    };
-};
 
 } // namespace vpi
 

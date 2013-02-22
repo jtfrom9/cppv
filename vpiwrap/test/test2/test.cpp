@@ -27,20 +27,22 @@ void clkgen() {
 void posedge_clkmon() {
     while(true) {
         wait(posedge(clk));
-        cout << format("%04d: clk=%0d") % sim_time() % clk->readv() << endl;
+        cout << format("%04d: clk=%0d") % sim_time() % *clk << endl;
     }
 }
 
 void init()
 {
-    clk    = top().get_reg("clk");
-    n_rst  = top().get_reg("n_rst");
-    addr   = top().get_reg("addr");
-    dwrite = top().get_reg("dwrite");
-    dread  = top().get_wire("dread");
-    req    = top().get_reg("req");
-    wen    = top().get_reg("wen");
-    ack    = top().get_wire("ack");
+    clk    = top().getReg_p("clk");
+    n_rst  = top().getReg_p("n_rst");
+    addr   = top().getReg_p("addr");
+    dwrite = top().getReg_p("dwrite");
+    dread  = top().getWire_p("dread");
+    req    = top().getReg_p("req");
+    wen    = top().getReg_p("wen");
+    ack    = top().getWire_p("ack");
+
+    Module& m = top().getModule("hoge");
 
     clk->write(0);
     n_rst->write(1);
@@ -83,7 +85,7 @@ int read(int _addr)
     while( ack->readi() == 0 )
         wait( posedge(clk) );
 
-    ret = dread->readi();
+    ret = *dread;
     
     req->write(0);
     

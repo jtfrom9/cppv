@@ -12,6 +12,7 @@
 
 #include "util.hpp"
 #include "Object.hpp"
+#include "Signal.hpp"
 #include "Simulator.hpp"
 #include "Value.hpp"
 
@@ -269,9 +270,9 @@ public:
     //
     // object getter
     //
-    virtual Reg* get_reg(string name) const;
-    virtual Wire* get_wire(string name) const;
-    virtual Module* get_module(string name) const;
+    virtual Reg* getReg_p( const string& name ) const;
+    virtual Wire* getWire_p( const string& name ) const;
+    virtual Module* getModule_p( const string& name ) const;
 
     //
     // static

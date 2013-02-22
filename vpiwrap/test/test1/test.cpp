@@ -7,7 +7,7 @@ using namespace vpi;
 using vpi::wait;
 
 void clkgen() {
-    Reg* clk = top().get_reg("clk");
+    Reg* clk = top().getReg_p("clk");
     while(true) {
         clk->write(0);
         delay(10);
@@ -17,8 +17,8 @@ void clkgen() {
 };
 
 void datagen() {
-    Reg* A = top().get_reg("A");
-    Reg* B = top().get_reg("B");
+    Reg* A = top().getReg_p("A");
+    Reg* B = top().getReg_p("B");
 
     A->write(0);
     B->write(0);
@@ -34,9 +34,9 @@ void datagen() {
 }
 
 void outmon() {
-    Wire* C = top().get_wire("C");
-    ISignal* A = top().get_reg("A");
-    ISignal* B = top().get_reg("B");
+    Wire* C = top().getWire_p("C");
+    ISignal* A = top().getReg_p("A");
+    ISignal* B = top().getReg_p("B");
     while(true) {
         wait(C);
         cout << format("time: %4d, A=%s, B=%s, C=%s") 

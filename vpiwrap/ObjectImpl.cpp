@@ -129,26 +129,26 @@ void ModuleImpl::scanModules( vector<ModuleImpl*>& mods, Object* parent )
     }
 }
 
-Reg* ModuleImpl::get_reg(string name) const {
+Reg* ModuleImpl::getReg_p( const string& name ) const {
     vector<RegImpl*>::const_iterator pr;
     if ((pr = find_if( _regs.begin(), _regs.end(), Object::predNameOf(name) )) == _regs.end()) {
-        throw runtime_error("get_reg: not found: " + name);
+        return 0;
     }
     return *pr;
 }
 
-Wire* ModuleImpl::get_wire(string name) const {
+Wire* ModuleImpl::getWire_p( const string& name ) const {
     vector<WireImpl*>::const_iterator pw;
     if ((pw = find_if( _wires.begin(), _wires.end(), Object::predNameOf(name) )) == _wires.end()) {
-        throw runtime_error("get_wire: not found: " + name);
+        return 0;
     }
     return *pw;
 }
 
-Module* ModuleImpl::get_module(string name) const {
+Module* ModuleImpl::getModule_p( const string& name ) const {
     vector<ModuleImpl*>::const_iterator pm;
     if ((pm = find_if( _modules.begin(), _modules.end(), Object::predNameOf(name) )) == _modules.end()) {
-        throw runtime_error("get_module: not found: " + name);
+        return 0;
     }
     return *pm;
 }

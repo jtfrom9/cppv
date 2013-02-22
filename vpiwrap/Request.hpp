@@ -8,6 +8,7 @@
 
 #include "util.hpp"
 #include "Object.hpp"
+#include "Signal.hpp"
 #include "Simulator.hpp"
 #include "ProcessManager.hpp"
 
