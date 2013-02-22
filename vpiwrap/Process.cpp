@@ -1,4 +1,5 @@
 #include <string>
+#include <sstream>
 #include <stdexcept>
 
 using std::string;
@@ -15,13 +16,21 @@ using boost::shared_ptr;
 
 namespace vpi {
 
+using internal::generic_generator;
+using internal::stop_iteration;
+using internal::caught_exception;
+
+using std::stringstream;
+
 class Context: public generic_generator<Request*>
 {
 private:
     Process* _proc;
 
 public:
-    Context( Process* proc ): _proc(proc)
+    Context( Process* proc ): 
+        generic_generator<Request*>( proc->name() ),
+        _proc(proc)
     {}
 
 protected:
@@ -54,22 +63,24 @@ Process::~Process()
 void Process::resume()
 {
     bool terminated=false;
-    bool abort=false;
 
     _status = RUN;
     try {
         _context->next();
     } 
     catch(const stop_iteration& e) {
-        terminated = e.terminated;
-        abort      = e.abort;
-        _abort_msg  = e.except_msg;
+        terminated = e.terminated();
+    }
+    catch(const caught_exception& e) {
+        stringstream ss;
+        ss << "<< Caught Exception in '" << e.from() << "' >>" << endl;
+        ss << "    " << e.caught_what() << endl;
+        cerr << ss.str() << endl;
+        throw FinishSimulation(); // finish whole simulation process.
     }
     if (_context->end()) {
         _status = END;
-        if(abort)           _end_reason = ABORT;
-        else if(terminated) _end_reason = TERMINATE;
-        else                _end_reason = NORMAL;
+        _end_reason = (terminated) ? TERMINATE : NORMAL;
         BOOST_FOREACH( ProcessCallback* cb, _callbacks ) {
             cb->onEnd();
         }

@@ -8,6 +8,7 @@
 
 #include "util.hpp"
 #include "Object.hpp"
+#include "Signal.hpp"
 
 namespace vpi {
 
@@ -39,7 +40,6 @@ public:
     typedef enum {
         NORMAL,
         TERMINATE,
-        ABORT
     } end_reason_t;
 
 private:

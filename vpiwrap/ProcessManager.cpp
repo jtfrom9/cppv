@@ -137,9 +137,9 @@ public:
                 if( proc->is_end() ) {
                     temp_end_list.push_back( proc ); // to end list
 
-                    if( proc->end_reason()==Process::ABORT ) {
-                        cerr << format("Abort: %s: %s") % proc->name() % proc->abort_msg() << endl;
-                    }
+                    // if( proc->end_reason()==Process::ABORT ) {
+                    //     cerr << format("Abort: %s: %s") % proc->name() % proc->abort_msg() << endl;
+                    // }
                 }
             }
 

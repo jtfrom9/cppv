@@ -1,25 +1,30 @@
-#include <cstdlib>
 #include <cstring>
 #include <exception>
 #include <stdexcept>
-#include <iostream>
 #include <string>
 
 #include <ucontext.h>
 
 #include "boost/format.hpp"
 
-struct stop_iteration: std::exception 
-{
-public:
-    bool terminated;
-    bool abort;
-    std::string except_msg;
+namespace vpi {
+namespace internal {
 
-    stop_iteration(bool _terminated, bool _abort, std::string _except_msg):
-        terminated(_terminated),
-        abort(_abort),
-        except_msg(_except_msg)
+using std::exception;
+using std::string;
+using std::runtime_error;
+using std::strncpy;
+using boost::format;
+
+class stop_iteration: exception 
+{
+    string _from;
+    bool   _terminated;
+
+public:
+    stop_iteration(string from, bool terminated):
+        _from(from),
+        _terminated(terminated)
     {}
 
     virtual ~stop_iteration() throw()
@@ -28,19 +33,50 @@ public:
     const char* what() const throw() 
     {
         static char msg[512];
-        std::strncpy(msg, 
-                     (boost::format("stop_iteration: terminated=%d, abort=%d%s") 
-                      % terminated 
-                      % abort 
-                      % ((!abort) ? "" : (boost::format("(msg=)") % except_msg).str()))
-                     .str().c_str(),
-                     sizeof(msg));
+        strncpy(msg,
+                (format("%s %s.") % _from % ((_terminated) ? "terminated" : "stop"))
+                .str().c_str(),
+                sizeof(msg));
         return msg;
     }
+    
+    bool terminated() const { return _terminated; }
+    string from() const     { return _from; }
 };
+
+
+class caught_exception: exception
+{
+    string _from;
+    string _what;
+    
+public:
+    caught_exception( string from, string what ):
+        _from(from),
+        _what(what)
+    {}
+
+    virtual ~caught_exception() throw()
+    {}
+
+    const char* what() const throw()
+    {
+        static char msg[512];
+        strncpy(msg,
+                (format("caught_exception: %s from %s") % _what % _from).str().c_str(),
+                sizeof(msg));
+        return msg;
+    }
+
+    const string from() const        { return _from; }
+    const string caught_what() const { return _what; }
+};
+
 
 class generator {
 private:
+    string _name;
+
     ucontext_t _context_child;
     ucontext_t _context_parent;
     char *_stack;
@@ -50,13 +86,13 @@ private:
     bool  _terminated;
     bool  _abort;
     
-    std::string _except_msg;
+    string _except_msg;
 
     static void callChild(generator* gen) {
         try {
             gen->body();
         }
-        catch(const std::exception& e) {
+        catch(const exception& e) {
             gen->_except_msg = e.what();
             gen->_abort = true;
         }
@@ -66,13 +102,14 @@ private:
     typedef void func_t();
 
 protected:
-    generator( int stack_size=16*1024 ): 
+    generator( string name, int stack_size=16*1024 ): 
+        _name(name),
         _end(false),
         _terminated(false),
         _abort(false)
     {
         if(getcontext(&_context_child)==-1)
-            throw std::runtime_error("generator: fail @ getcontext");
+            throw runtime_error("generator: fail @ getcontext");
         _stack = (char*)malloc(stack_size);
         _stack_size = stack_size;
         _context_child.uc_stack.ss_sp   = _stack;
@@ -85,17 +122,20 @@ protected:
         free(_stack);
     }
 
-    virtual void body() throw( std::exception ) = 0;
+    virtual void body() throw( exception ) = 0;
 
 public:
     void next()
     {
         if(_end || _terminated) {
             _end = true;
-            throw stop_iteration(_terminated,_abort,_except_msg);
+            throw stop_iteration(_name, _terminated);
         }
         if(swapcontext(&_context_parent, &_context_child) == -1)
-            throw std::runtime_error("next: fail @ swapcontext");
+            throw runtime_error("next: fail @ swapcontext");
+        if(_abort) {
+            throw caught_exception(_name, _except_msg);
+        }
     }
     bool end() {
         return _end;
@@ -107,7 +147,7 @@ public:
 protected:
     void _yield() {
         if(swapcontext(&_context_child, &_context_parent) == -1)
-            throw std::runtime_error("yield: fail @ swapcontext");
+            throw runtime_error("yield: fail @ swapcontext");
     }
     void yield() {
         _yield();
@@ -123,8 +163,8 @@ private:
     T     _data;
     
 public:
-    generic_generator( int stack_size=16*1024 ):
-        generator( stack_size ),
+    generic_generator( string name, int stack_size=16*1024 ):
+        generator( name, stack_size ),
         _has_data( false )
     {}
 
@@ -148,3 +188,5 @@ protected:
     }
 };
 
+} // namespace internal
+} // namespace vpi
