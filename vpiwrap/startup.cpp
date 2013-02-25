@@ -1,3 +1,5 @@
+#include <sys/time.h>
+
 #include "Simulator.hpp"
 #include "Process.hpp"
 #include "ProcessManager.hpp"
@@ -42,12 +44,35 @@ int startup(s_cb_data*cpb)
 extern "C" {
 #endif
 
-void initialCallback()
-{
-    static s_cb_data cbdata;
+static struct timeval tv_start;
+static struct timeval tv_end;
 
-    cbdata.reason    = cbStartOfSimulation;
-    cbdata.cb_rtn    = startup;
+static PLI_INT32 onStartSim( s_cb_data* cbdata )
+{
+    //vpi_printf("onStartSim\n");
+    gettimeofday(&tv_start,NULL);
+    return 0;
+}
+
+static PLI_INT32 onEndSim( s_cb_data* cbdata )
+{
+    struct timeval tv;
+
+
+    gettimeofday(&tv_end,NULL);
+
+    timersub(&tv_end,&tv_start,&tv);
+    
+    vpi_printf("elapsed: %lf (sec)\n", tv.tv_sec + (tv.tv_usec * 1e-6));
+    return 0;
+}
+
+static void registerCb( PLI_INT32 reason, PLI_INT32 (*cb_rtn)(struct t_cb_data *) )
+{
+    s_cb_data cbdata;
+    
+    cbdata.reason    = reason;
+    cbdata.cb_rtn    = cb_rtn;
     cbdata.obj       = NULL;
     cbdata.time      = NULL;
     cbdata.value     = NULL;
@@ -58,8 +83,34 @@ void initialCallback()
     }
 }
 
+static void registerEvalCallback()
+{
+    registerCb( cbStartOfSimulation, onStartSim );
+    registerCb( cbEndOfSimulation,   onEndSim );
+}
+
+void initialCallback()
+{
+    //static s_cb_data cbdata;
+    s_cb_data cbdata;
+    
+    cbdata.reason    = cbStartOfSimulation;
+    cbdata.cb_rtn    = startup;
+    cbdata.obj       = NULL;
+    cbdata.time      = NULL;
+    cbdata.value     = NULL;
+    cbdata.user_data = NULL;
+  
+    if(vpi_register_cb(&cbdata) == NULL) {
+        vpi_printf("initialCallback: fail to vpi_register_cb...");
+    }
+    
+    registerEvalCallback();
+}
+
 void (*vlog_startup_routines[])() = {
     initialCallback,
+    //registerSysTask,
     0
 };
 #ifdef __cplusplus
