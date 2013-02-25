@@ -13,12 +13,14 @@ $(SIMBIN): $(RTLFILES)
 
 sim: lib $(SIMBIN)
 
-RUN_COMMAND=LD_LIBRARY_PATH=$(shell pwd) $(SIMBIN) -l $(SIMBIN).log
+export LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):$(PWD)
+
+RUN_COMMAND=$(SIMBIN) -l $(SIMBIN).log
 
 build: sim
 
 .PHONY: cleansim
 cleansim:
-	rm -rf csrc simv* ucli.key $(SIMBIN) $(SIMBIN).log
+	rm -rf csrc simv* ucli.key $(SIMBIN) $(SIMBIN).log $(SIMBIN).daidir
 
 
