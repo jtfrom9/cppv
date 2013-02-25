@@ -18,8 +18,25 @@ public:
     {}
 
 protected:
+
     void main() {
-        vmain(0,0);
+        s_vpi_vlog_info info;
+        vpi_get_vlog_info(&info);
+
+        char* argv[1024];
+        int argc=1;
+        argv[0] = info.argv[0];
+        for(int i=1; i<info.argc; i++) {
+            if(info.argv[i][0]=='+') {
+                char* buf = (char*)malloc(strlen(info.argv[i]) + 2);
+                buf[0] = '-';
+                buf[1] = '-';
+                strcpy(buf+2, &info.argv[i][1]);
+                argv[argc] = buf;
+                argc++;
+            }
+        }
+        vmain(argc,argv);
     }
 };
 

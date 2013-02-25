@@ -28,12 +28,12 @@ VPICPP_OBJS = startup.o Simulator.o Process.o ProcessManager.o Value.o ObjectImp
 	$(CC) $(CFLAGS) -c $<
 
 $(TESTBENCH_LIB): $(VPICPP_OBJS) $(TESTBENCH_OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@ $(EXTRA_LDFLAGS)
 
 lib: $(TESTBENCH_LIB) 
 
 run: build
-	$(RUN_COMMAND)
+	$(RUN_COMMAND) $(SIM_ARGS)
 
 debug: build
 	gdb -tui --arg $(RUN_COMMAND)
