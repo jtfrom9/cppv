@@ -126,8 +126,8 @@ void Process::wait( Process* proc ) {
 }
 
 // protected
-void Process::wait( ISignal* obj ) {
-    shared_ptr<Request> p( new WaitValueChangeRequest(this, obj) );
+void Process::wait( ISignal* sig ) {
+    shared_ptr<Request> p( new WaitValueChangeRequest(this, sig) );
     _sleep_reason = WAIT_FOR_VALUECHANGE;
     _context->yield_send( p.get() );
 }
@@ -169,15 +169,16 @@ void wait( Process* proc )
     return currentProcess->wait( proc );
 }
 
-void wait( ISignal* obj )
+void wait( ISignal* sig )
 {
     Process *currentProcess = ProcessManager::get().getCurrent();
-    return currentProcess->wait( obj );
+    return currentProcess->wait( sig );
 }
+void wait( ISignal& sig ) { wait(&sig); }
 
-ISignal* posedge( ISignal* sig )
+ISignal& posedge( ISignal& sig )
 {
-    return &sig->posedge();
+    return sig.posedge();
 }
 
 Process* create( Process* proc )

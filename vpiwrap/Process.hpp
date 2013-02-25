@@ -65,7 +65,9 @@ protected:
 
     void delay( int cycle );
     void wait( Process* proc );
-    void wait( ISignal* obj );
+    void wait( ISignal* sig );
+    void wait( ISignal& sig ) { wait(&sig); }
+
     Process* create(Process* proc);
     void terminate( Process* proc, bool block = true );
     void finish();
@@ -91,7 +93,7 @@ public:
     // friend functions
     friend void delay( int cycle );
     friend void wait( Process* proc );
-    friend void wait( ISignal* obj );
+    friend void wait( ISignal* sig );
     friend Process* create( Process* proc );
     friend Process* create( const char* name, boost::function<void()> func );
     friend void terminate( Process* proc, bool block );
@@ -103,8 +105,9 @@ public:
 //
 void delay( int cycle );
 void wait( Process* proc );
-void wait( ISignal* obj );
-ISignal* posedge( ISignal* sig );
+void wait( ISignal* sig );
+void wait( ISignal& sig );
+ISignal& posedge( ISignal& sig );
 Process* create( Process* proc );
 Process* create( const char* name, boost::function<void()> func );
 void terminate( Process* proc, bool block=true );
