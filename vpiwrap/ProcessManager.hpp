@@ -1,8 +1,7 @@
 #ifndef PROCESSMANAGER_HPP
 #define PROCESSMANAGER_HPP
 
-#include "boost/noncopyable.hpp"
-
+#include "util.hpp"
 #include "Process.hpp"
 
 namespace vpi {
@@ -10,7 +9,7 @@ namespace vpi {
 class Process;
 class Simulator;
 
-class ProcessManager: public boost::noncopyable
+class ProcessManager: public noncopyable
 {
 protected:
     virtual ~ProcessManager()

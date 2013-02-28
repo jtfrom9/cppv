@@ -182,11 +182,11 @@ const char* ProcessManagerImpl::dump() const
     stringstream ss;
     ss << "cur: " << ((_current!=0) ? _current->name() : "-");
     ss << ", active: {";
-    BOOST_FOREACH( Process* p, _active_list ) { ss << p->name() << ","; }
+    LIST_FOREACH( Process*, p, _active_list ) { ss << (*p).name() << ","; }
     ss << "} run: { ";
-    BOOST_FOREACH( Process* p, _run_list ) { ss << p->name() << ","; }
+    LIST_FOREACH( Process*, p, _run_list ) { ss << (*p).name() << ","; }
     ss << "} end: { ";
-    BOOST_FOREACH( Process* p, _end_list ) { ss << p->name() << ","; }
+    LIST_FOREACH( Process*, p, _end_list ) { ss << (*p).name() << ","; }
     ss << "}";
     return ss.str().c_str();
 }

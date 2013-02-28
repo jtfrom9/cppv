@@ -5,10 +5,6 @@
 using std::string;
 using std::invalid_argument;
 
-#include "boost/shared_ptr.hpp"
-#include "boost/foreach.hpp"
-using boost::shared_ptr;
-
 #include "util.hpp"
 #include "Process.hpp"
 #include "Request.hpp"
@@ -81,8 +77,8 @@ void Process::resume()
     if (_context->end()) {
         _status = END;
         _end_reason = (terminated) ? TERMINATE : NORMAL;
-        BOOST_FOREACH( ProcessCallback* cb, _callbacks ) {
-            cb->onEnd();
+        LIST_FOREACH( ProcessCallback*, cb, _callbacks ) {
+            (*cb).onEnd();
         }
     } else {
         _status = SLEEP;

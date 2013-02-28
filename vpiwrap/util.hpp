@@ -10,9 +10,15 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-#include "boost/format.hpp"
-#include "boost/foreach.hpp"
+#include <boost/noncopyable.hpp>
+#include <boost/format.hpp>
+#include <boost/shared_ptr.hpp>
+
+using boost::noncopyable;
 using boost::format;
+using boost::shared_ptr;
+
+#include "foreach.hpp"
 
 class not_implemented: public std::runtime_error
 {
@@ -30,7 +36,5 @@ typename Container::value_type _find( Container& c,
     typename Container::iterator i = std::find(c.begin(), c.end(), v);
     return (i==c.end()) ? 0 : (*i);
 }
-
-
 
 #endif

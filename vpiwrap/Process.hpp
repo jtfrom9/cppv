@@ -3,8 +3,7 @@
 
 #include <list>
 
-#include "boost/noncopyable.hpp"
-#include "boost/function.hpp"
+#include <boost/function.hpp>
 
 #include "util.hpp"
 #include "Object.hpp"
@@ -23,7 +22,7 @@ public:
     virtual void onEnd() = 0;
 };
 
-class Process: public boost::noncopyable
+class Process: public noncopyable
 {
 public:
     typedef enum { INIT, RUN, SLEEP, END } status_t;

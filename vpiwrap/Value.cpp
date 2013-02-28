@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <cstring>
 
 using std::string;
 using std::vector;
@@ -12,9 +13,9 @@ using std::hex;
 
 #include "Value.hpp"
 
+namespace vpi {
 
 // ScalarValue
-
 ScalarValue::operator int() const
 {
     switch( _bit ) {
@@ -148,7 +149,7 @@ static bool set_vecval_bit(t_vpi_vecval& vpi_vecval, int index, char v)
 
 vecval make_vecval2(const char* str)
 {
-    int width = strlen(str);
+    int width = std::strlen(str);
 
     assert(str!=NULL && width!=0);
 
@@ -171,3 +172,6 @@ std::ostream& operator<<( std::ostream& os, const vecval& v )
     os << v.str();
     return os;
 }
+
+} //namespace vpi
+

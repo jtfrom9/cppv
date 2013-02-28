@@ -4,8 +4,6 @@
 #include <string>
 #include <stdexcept>
 
-#include "boost/noncopyable.hpp"
-
 #include "util.hpp"
 #include "Simulator.hpp"
 
@@ -16,7 +14,7 @@ namespace vpi {
 using std::string;
 using std::invalid_argument;
 
-class Object: public boost::noncopyable
+class Object: public noncopyable
 {
 protected:
     vpiHandle _handle;

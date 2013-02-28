@@ -5,7 +5,7 @@
 #include <ostream>
 #include <stdexcept>
 
-#include "boost/noncopyable.hpp"
+#include "util.hpp"
 
 #include "vpi_user.h"
 
@@ -38,7 +38,7 @@ class Module;
 class Reg;
 class Wire;
 
-class Simulator: public boost::noncopyable
+class Simulator: public noncopyable
 {
 public:
     virtual Object& getObject( const char* path ) const = 0;

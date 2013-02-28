@@ -6,19 +6,18 @@
 #include <iostream>
 #include <sstream>
 
-#include "boost/noncopyable.hpp"
-#include "boost/shared_ptr.hpp"
+#include "util.hpp"
 #include "vpi_user.h"
 
-#include "util.hpp"
-
+namespace vpi
+{
 class ValueBase
 {
 public:
     virtual ~ValueBase() {}
 };
 
-class ScalarValue: public ValueBase, public boost::noncopyable
+class ScalarValue: public ValueBase, public noncopyable
 {
     char _bit;
 public:
@@ -179,5 +178,7 @@ typedef VectorValue vecval;
 vecval make_vecval2(const char* str);
 
 std::ostream& operator<<( std::ostream& os, const VectorValue& v );
+
+} // namespace vpi
 
 #endif

@@ -8,8 +8,6 @@
 #include <iostream>
 #include <sstream>
 
-#include "boost/noncopyable.hpp"
-
 #include "util.hpp"
 #include "Object.hpp"
 #include "Signal.hpp"

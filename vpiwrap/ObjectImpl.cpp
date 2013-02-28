@@ -1,8 +1,9 @@
 #include <string>
 #include <stdexcept>
 
-#include "boost/foreach.hpp"
+#include "util.hpp"
 #include "ObjectImpl.hpp"
+
 #include "vpi_user.h"
 
 namespace vpi {
@@ -53,8 +54,8 @@ void ReadableSignalMixinBase::valueChanged( s_cb_data* pcbdata )
     object->_callbacks.clear();
 
     // hook callback handlers. by this, object->_callbacks may be re-push_back-ed.
-    BOOST_FOREACH( SimulatorCallback* cb, temp ) {
-        cb->called();
+    LIST_FOREACH( SimulatorCallback*, cb, temp ) {
+        (*cb).called();
     }
 }
 

@@ -4,8 +4,6 @@
 #include <cstring>
 #include <string>
 
-#include "boost/noncopyable.hpp"
-
 #include "util.hpp"
 #include "Object.hpp"
 #include "Signal.hpp"
@@ -16,7 +14,7 @@ namespace vpi {
 
 class Process;
 
-class Request: public boost::noncopyable
+class Request: public noncopyable
 {
 protected:
     Process* _proc;
