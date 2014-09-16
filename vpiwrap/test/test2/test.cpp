@@ -49,8 +49,6 @@ void posedge_clkmon() {
 void init()
 {
     sig = new signals();
-    //Module& m = top().getModule("hoge");
-
     sig->clk.write(0);
     sig->n_rst.write(1);
     sig->addr.write(0);
@@ -72,10 +70,10 @@ void write(int _addr, int _dat)
     sig->dwrite.write(_dat);
     sig->req.write(1);
     sig->wen.write(1);
-    
+
     while( sig->ack.readi() == 0 )      // wait ack==1
         wait( posedge(sig->clk) );
-    
+
     sig->req.write(0);
 
     while( sig->ack.readi() == 1 )      // wait ack==0
@@ -88,14 +86,14 @@ int read(int _addr)
     sig->addr.write(_addr * 2);
     sig->req.write(1);
     sig->wen.write(0);
-    
+
     while( sig->ack.readi() == 0 )
         wait( posedge(sig->clk) );
 
     ret = sig->dread;
-    
+
     sig->req.write(0);
-    
+
     while( sig->ack.readi() == 1 )      // wait ack==0
         wait( posedge(sig->clk) );
 

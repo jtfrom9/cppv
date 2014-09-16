@@ -7,7 +7,7 @@ module top;
    reg         req;
    reg         wen;
    wire        ack;
-   
+
    mem m( clk, n_rst,
           addr, dwrite, dread, req, wen,
           ack );
@@ -15,7 +15,37 @@ module top;
    initial begin
       $dumpvars;
    end
-   
+
+   /*
+   always #10 clk <= ~clk;
+   initial begin
+      clk    <= 0;
+      n_rst  <= 1;
+      addr   <= 0;
+      dwrite <= 0;
+      req    <= 0;
+      wen    <= 0;
+      #100;
+      n_rst  <= 0;
+      #100;
+      n_rst  <= 1;
+
+      #500;
+      @(posedge clk);
+      req <= 1;
+      wen <= 1;
+      addr <= 1;
+      dwrite <= 2;
+      //wait(ack==1'b1);
+      while(ack==1'b0)
+        @(posedge clk);
+      req <= 0;
+      wen <= 0;
+      #100;
+
+      $finish;
+   end
+*/
 endmodule
 
 module mem(CLK, nRST,
@@ -30,22 +60,22 @@ module mem(CLK, nRST,
    input         REQ;
    input         WEN;
    output        ACK;
-   
+
    reg [15:0]    dout;
    reg           ack;
-   
+
    assign DOUT = dout;
    assign ACK = ack;
 
    parameter memsize = ((16*1024)-1);
-     
+
    reg [7:0]     mem[memsize:0];
    reg           state;
 
    integer       i;
    initial begin
       for(i=0; i<=memsize; i=i+1)
-        mem[i] = 0;
+        mem[i] <= 0;
    end
 
    always@(posedge CLK or nRST) begin
@@ -64,7 +94,6 @@ module mem(CLK, nRST,
                  else begin
                     dout <= { mem[ADDR+1] , mem[ADDR] };
                  end
-                 
                  ack <= 1;
                  state <= 1;
               end
@@ -78,7 +107,6 @@ module mem(CLK, nRST,
          endcase
       end
    end
-   
 endmodule
 
 
