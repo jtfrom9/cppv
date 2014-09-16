@@ -187,7 +187,9 @@ private:
     }
 
     void _put_no_delay( s_vpi_value& val ) {
-        vpi_put_value(T::handle(), &val, NULL, vpiNoDelay);
+//        vpi_put_value(T::handle(), &val, NULL, vpiNoDelay);
+        static s_vpi_time t = { vpiSimTime, 0, 0, 0.0f };
+        vpi_put_value(T::handle(), &val, &t, vpiTransportDelay);
     }
     void _put_inertial_delay( s_vpi_value& val, s_vpi_time& _time ) {
         vpi_put_value(T::handle(), &val, &_time, vpiInertialDelay);
