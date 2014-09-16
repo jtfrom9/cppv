@@ -1,6 +1,8 @@
 #include<iostream>
+#include<map>
 using std::cout;
 using std::endl;
+using std::map;
 
 #include "Process.hpp"
 using namespace vpi;
@@ -64,10 +66,10 @@ void reset(int cycle)
     sig->n_rst.write(1);
 }
 
-void write(int _addr, int _dat)
+void write(int addr, int dat)
 {
-    sig->addr.write(_addr * 2);
-    sig->dwrite.write(_dat);
+    sig->addr.write(addr * 2);
+    sig->dwrite.write(dat);
     sig->req.write(1);
     sig->wen.write(1);
 
@@ -80,17 +82,17 @@ void write(int _addr, int _dat)
         wait( posedge(sig->clk) );
 }
 
-int read(int _addr)
+int read(int addr)
 {
     int ret;
-    sig->addr.write(_addr * 2);
+    sig->addr.write(addr * 2);
     sig->req.write(1);
     sig->wen.write(0);
 
     while( sig->ack.readi() == 0 )
         wait( posedge(sig->clk) );
 
-    ret = sig->dread;
+    ret = sig->dread.readi();
 
     sig->req.write(0);
 
@@ -112,15 +114,34 @@ int vmain(int argc, char *argv[])
 
     delay(1000);
 
-    for(int addr=0; addr<8*1024; addr++) {
-        write(addr,addr);
+    map<int,int> memory;
+
+    for(int i=0; i<100; i++) {
+        int addr = rand() % (8*1024);
+        int data = rand() % (8*1024);
+        write( addr, data );
+        memory[ addr ] = data;     // backup addr/data pair
+        cout << format("write. addr:%04x, data:%04x") % addr % data << endl;
         wait( posedge(sig->clk) );
     }
 
-    for(int addr=0; addr<8*1024; addr++) {
-        cout << format("addr=%04x, data=%04x") % addr % read(addr) << endl;
+    int check=0;
+    int fail=0;
+    for(map<int,int>::iterator iter=memory.begin(); iter!=memory.end(); iter++) {
+        int addr  = iter->first;
+        int rdata = read(addr);
+        check++;
+        if(rdata == memory[addr]) {
+            cout << format("ok. addr:%04x, data:%04x") % addr % rdata << endl;
+        } else {
+            cout << format("ng. addr:%04x, data:%04x (expected:%04x)") % addr % rdata % memory[addr] << endl;
+            fail++;
+        }
         wait( posedge(sig->clk) );
     }
+
+    cout << format(">> %0d fails / %0d test") % fail % check << endl;
+    cout << ((fail==0) ? "OK" : "NG") << endl;
 
     delay(1000);
     finish();
