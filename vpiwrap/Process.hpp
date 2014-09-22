@@ -3,8 +3,6 @@
 
 #include <list>
 
-#include <boost/function.hpp>
-
 #include "util.hpp"
 #include "Object.hpp"
 #include "Signal.hpp"
@@ -88,13 +86,12 @@ public:
 
     void addEndCallback( ProcessCallback* cb );
 
-    
     // friend functions
     friend void delay( int cycle );
     friend void wait( Process* proc );
     friend void wait( ISignal* sig );
     friend Process* create( Process* proc );
-    friend Process* create( const char* name, boost::function<void()> func );
+    friend Process* create( const char* name, void (*func)(void*), void* arg );
     friend void terminate( Process* proc, bool block );
     friend void finish();
 };
@@ -108,7 +105,7 @@ void wait( ISignal* sig );
 void wait( ISignal& sig );
 ISignal& posedge( ISignal& sig );
 Process* create( Process* proc );
-Process* create( const char* name, boost::function<void()> func );
+Process* create( const char* name, void (*func)(void*), void *arg=NULL );
 void terminate( Process* proc, bool block=true );
 void finish();
 long long sim_time();

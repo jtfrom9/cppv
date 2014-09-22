@@ -6,7 +6,7 @@ using std::endl;
 using namespace vpi;
 using vpi::wait;
 
-void clkgen() {
+void clkgen(void* arg) {
     Reg* clk = top().getReg_p("clk");
     while(true) {
         clk->write(0);
@@ -16,7 +16,7 @@ void clkgen() {
     }
 };
 
-void datagen() {
+void datagen(void* arg) {
     Reg* A = top().getReg_p("A");
     Reg* B = top().getReg_p("B");
 
@@ -33,7 +33,7 @@ void datagen() {
     }
 }
 
-void outmon() {
+void outmon(void* arg) {
     Wire* C = top().getWire_p("C");
     ISignal* A = top().getReg_p("A");
     ISignal* B = top().getReg_p("B");

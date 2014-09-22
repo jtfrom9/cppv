@@ -1,9 +1,12 @@
 TESTBENCH_LIB = libvpicpp-iverilog.vpi
 
+IVERILOG_VPI_INC_DIR ?= /usr/include/iverilog
+IVERILOG_BIN_DIR ?= /usr/bin
+
 CFLAGS += -I$(IVERILOG_VPI_INC_DIR)
 LDFLAGS += -L$(IVERILOG_VPI_LIB_DIR) -lvpi
 
-SIMBIN = $(TEST)_iverilog.exe
+SIMBIN = $(TEST)_iverilog
 
 RUN_COMMAND=$(IVERILOG_BIN_DIR)/vvp -m./$(TESTBENCH_LIB:.vpi=) $(SIMBIN)
 

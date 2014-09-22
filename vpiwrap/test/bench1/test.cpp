@@ -14,7 +14,7 @@ using namespace vpi;
 using vpi::wait;
 
 
-void clkgen()
+void clkgen(void* arg)
 {
     Reg& clk = top().getReg("clk");
     while(true) {

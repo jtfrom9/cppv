@@ -197,22 +197,25 @@ void finish()
 
 class UserProcess: public Process
 {
-    boost::function<void()> _func;
+    void (*_func)(void*);
+    void* _arg;
+
 public:
-    UserProcess( const char* name, boost::function<void()> func ): 
+    UserProcess( const char* name, void (*func)(void*), void* arg ):
         Process(name),
-        _func(func)
+        _func(func),
+        _arg(arg)
     {}
 
     void main() {
-        _func();
+        _func(_arg);
     }
 };
 
-Process* create( const char* name, boost::function<void()> func )
+Process* create( const char* name, void (*func)(void*), void* arg )
 {
     Process *currentProcess = ProcessManager::get().getCurrent();
-    return currentProcess->create(new UserProcess( name, func ));
+    return currentProcess->create(new UserProcess( name, func, arg ));
 }
 
 long long sim_time() 

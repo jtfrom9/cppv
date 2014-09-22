@@ -1,3 +1,4 @@
+#include <cstring>
 #include <sys/time.h>
 
 #include "Simulator.hpp"
